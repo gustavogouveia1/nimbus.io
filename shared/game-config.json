@@ -1,0 +1,94 @@
+{
+    "map": {
+        "width": 6000,
+        "height": 6000,
+        "gridSize": 60
+    },
+    "player": {
+        "baseHp": 100,
+        "baseMana": 100,
+        "baseSpeed": 3.8,
+        "baseSize": 28,
+        "hpPerLevel": 5,
+        "manaPerLevel": 3,
+        "maxLevel": 45
+    },
+    "spells": {
+        "basic": {
+            "damage": 5,
+            "speed": 11,
+            "size": 12,
+            "manaCost": 0,
+            "cooldown": 20
+        },
+        "stupefy": {
+            "damage": 8,
+            "speed": 18,
+            "size": 12,
+            "manaCost": 8,
+            "cooldown": 0
+        },
+        "incendio": {
+            "damage": 10,
+            "speed": 16,
+            "size": 14,
+            "manaCost": 10,
+            "cooldown": 0,
+            "effects": ["burn"]
+        },
+        "glacius": {
+            "damage": 6,
+            "speed": 14,
+            "size": 16,
+            "manaCost": 10,
+            "cooldown": 0,
+            "effects": ["slow"]
+        },
+        "bombarda": {
+            "damage": 18,
+            "speed": 12,
+            "size": 20,
+            "manaCost": 15,
+            "cooldown": 0,
+            "effects": ["aoe"],
+            "aoeRadius": 60
+        },
+        "protego": {
+            "manaCost": 20,
+            "cooldown": 60,
+            "duration": 180
+        }
+    },
+    "creatures": {
+        "pixie": {
+            "hp": 10,
+            "xp": 10,
+            "size": 18,
+            "color": "#E8D4A8"
+        },
+        "fairy": {
+            "hp": 30,
+            "xp": 25,
+            "size": 24,
+            "color": "#B39DDB"
+        },
+        "snitch": {
+            "hp": 80,
+            "xp": 130,
+            "size": 32,
+            "color": "#FFD700"
+        }
+    },
+    "effects": {
+        "slowDuration": 90,
+        "slowMultiplier": 0.4,
+        "burnDuration": 120,
+        "burnDamagePerTick": 1,
+        "burnTickInterval": 5
+    },
+    "speedBoost": {
+        "maxCharge": 600,
+        "duration": 180,
+        "multiplier": 2.0
+    }
+}

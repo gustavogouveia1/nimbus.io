@@ -1,0 +1,189 @@
+{
+    "combos": {
+        "stunning_fire": {
+            "name": "Fogo Atordoante",
+            "nameEn": "Stunning Fire",
+            "sequence": [1, 2, 1],
+            "manaCost": 45,
+            "cooldown": 360,
+            "damage": 55,
+            "speed": 15,
+            "size": 20,
+            "effects": ["stun", "burn"],
+            "color": "#FF6B35",
+            "icon": "fire_stun"
+        },
+        "frozen_paralysis": {
+            "name": "Paralisia Gelida",
+            "nameEn": "Frozen Paralysis",
+            "sequence": [3, 1, 3],
+            "manaCost": 50,
+            "cooldown": 420,
+            "damage": 45,
+            "speed": 14,
+            "size": 22,
+            "effects": ["freeze", "stun"],
+            "color": "#00D4FF",
+            "icon": "ice_stun"
+        },
+        "steam_blast": {
+            "name": "Vapor Explosivo",
+            "nameEn": "Steam Blast",
+            "sequence": [2, 3, 2],
+            "manaCost": 55,
+            "cooldown": 480,
+            "damage": 60,
+            "speed": 12,
+            "size": 28,
+            "effects": ["aoe", "slow"],
+            "color": "#B8B8B8",
+            "aoeRadius": 80,
+            "icon": "steam"
+        },
+        "triple_stupefy": {
+            "name": "Stupefy Triplo",
+            "nameEn": "Triple Stupefy",
+            "sequence": [1, 1, 1],
+            "manaCost": 40,
+            "cooldown": 300,
+            "damage": 20,
+            "speed": 18,
+            "size": 12,
+            "effects": ["spread", "stun"],
+            "color": "#FF4444",
+            "projectiles": 3,
+            "spreadAngle": 0.4,
+            "icon": "triple"
+        },
+        "elemental_storm": {
+            "name": "Tempestade Elemental",
+            "nameEn": "Elemental Storm",
+            "sequence": [1, 3, 2, 1],
+            "manaCost": 70,
+            "cooldown": 720,
+            "damage": 80,
+            "speed": 11,
+            "size": 30,
+            "effects": ["burn", "slow", "stun"],
+            "color": "#9B59B6",
+            "icon": "storm"
+        },
+        "glacial_inferno": {
+            "name": "Inferno Glacial",
+            "nameEn": "Glacial Inferno",
+            "sequence": [2, 2, 3, 3],
+            "manaCost": 65,
+            "cooldown": 600,
+            "damage": 70,
+            "speed": 10,
+            "size": 32,
+            "effects": ["burn", "freeze", "aoe"],
+            "color": "#E74C3C",
+            "aoeRadius": 90,
+            "icon": "inferno"
+        },
+        "arcane_avalanche": {
+            "name": "Avalanche Arcana",
+            "nameEn": "Arcane Avalanche",
+            "sequence": [3, 3, 3, 1],
+            "manaCost": 60,
+            "cooldown": 540,
+            "damage": 55,
+            "speed": 9,
+            "size": 35,
+            "effects": ["freeze", "knockback", "aoe"],
+            "color": "#3498DB",
+            "aoeRadius": 100,
+            "icon": "avalanche"
+        },
+        "reactive_shield": {
+            "name": "Escudo Reativo",
+            "nameEn": "Reactive Shield",
+            "sequence": [5, 1, 2, 3],
+            "manaCost": 75,
+            "cooldown": 900,
+            "damage": 0,
+            "effects": ["shield", "reflect", "thorns"],
+            "color": "#F1C40F",
+            "shieldDuration": 300,
+            "thornsDamage": 15,
+            "icon": "shield"
+        },
+        "arcane_apocalypse": {
+            "name": "Apocalipse Arcano",
+            "nameEn": "Arcane Apocalypse",
+            "sequence": [4, 2, 3, 2, 4],
+            "manaCost": 100,
+            "cooldown": 1200,
+            "damage": 120,
+            "speed": 8,
+            "size": 40,
+            "effects": ["mega_aoe", "burn", "slow", "stun"],
+            "color": "#8E44AD",
+            "aoeRadius": 150,
+            "tier": "legendary",
+            "icon": "apocalypse"
+        },
+        "elemental_harmony": {
+            "name": "Harmonia dos Elementos",
+            "nameEn": "Elemental Harmony",
+            "sequence": [1, 2, 3, 4, 5],
+            "manaCost": 90,
+            "cooldown": 1080,
+            "damage": 100,
+            "speed": 12,
+            "size": 35,
+            "effects": ["all_elements", "heal_self"],
+            "color": "#00FF88",
+            "healAmount": 30,
+            "tier": "legendary",
+            "icon": "harmony"
+        },
+        "explosive_fortress": {
+            "name": "Fortaleza Explosiva",
+            "nameEn": "Explosive Fortress",
+            "sequence": [5, 5, 4, 4, 1],
+            "manaCost": 85,
+            "cooldown": 960,
+            "damage": 90,
+            "effects": ["shield", "delayed_explosion"],
+            "color": "#E67E22",
+            "shieldDuration": 240,
+            "explosionDelay": 240,
+            "aoeRadius": 120,
+            "tier": "legendary",
+            "icon": "fortress"
+        },
+        "primordial_cyclone": {
+            "name": "Ciclone Primordial",
+            "nameEn": "Primordial Cyclone",
+            "sequence": [3, 2, 1, 2, 3],
+            "manaCost": 80,
+            "cooldown": 840,
+            "damage": 75,
+            "speed": 6,
+            "size": 45,
+            "effects": ["pull", "dot", "aoe"],
+            "color": "#1ABC9C",
+            "aoeRadius": 130,
+            "pullStrength": 3,
+            "tier": "legendary",
+            "icon": "cyclone"
+        }
+    },
+    "comboWindow": 1500,
+    "categories": {
+        "basic": {
+            "name": "Basicos",
+            "keys": 3
+        },
+        "intermediate": {
+            "name": "Intermediarios",
+            "keys": 4
+        },
+        "advanced": {
+            "name": "Avancados",
+            "keys": 5
+        }
+    }
+}

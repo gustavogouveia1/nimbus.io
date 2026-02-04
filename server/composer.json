@@ -1,0 +1,14 @@
+{
+    "name": "nimbus/io-server",
+    "description": "Nimbus.io Server - Batalha de Bruxos em Vassouras",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "cboden/ratchet": "^0.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "NimbusIO\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nimbus.io - Batalha de Bruxos</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Spectral:wght@400;500;600&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Tela de entrada - Estilo Diep.io -->
+    <div id="menu">
+        <!-- Formas geométricas flutuantes (background) -->
+        <div class="floating-shapes">
+            <div class="shape square yellow" style="left: 5%; top: 15%; --size: 35px; --rotation: 15deg;"></div>
+            <div class="shape square yellow" style="left: 15%; top: 45%; --size: 25px; --rotation: -20deg;"></div>
+            <div class="shape square yellow" style="left: 85%; top: 25%; --size: 30px; --rotation: 45deg;"></div>
+            <div class="shape square yellow" style="left: 75%; top: 65%; --size: 28px; --rotation: -10deg;"></div>
+            <div class="shape square yellow" style="left: 25%; top: 75%; --size: 32px; --rotation: 30deg;"></div>
+            <div class="shape square yellow" style="left: 92%; top: 80%; --size: 22px; --rotation: -35deg;"></div>
+            <div class="shape triangle red" style="left: 10%; top: 30%; --size: 28px; --rotation: 60deg;"></div>
+            <div class="shape triangle red" style="left: 88%; top: 45%; --size: 32px; --rotation: -30deg;"></div>
+            <div class="shape triangle red" style="left: 30%; top: 85%; --size: 25px; --rotation: 120deg;"></div>
+            <div class="shape triangle red" style="left: 70%; top: 15%; --size: 30px; --rotation: -60deg;"></div>
+            <div class="shape triangle red" style="left: 45%; top: 90%; --size: 26px; --rotation: 45deg;"></div>
+            <div class="shape pentagon blue" style="left: 8%; top: 60%; --size: 45px; --rotation: 20deg;"></div>
+            <div class="shape pentagon blue" style="left: 80%; top: 85%; --size: 50px; --rotation: -15deg;"></div>
+            <div class="shape pentagon blue" style="left: 20%; top: 20%; --size: 40px; --rotation: 35deg;"></div>
+        </div>
+
+        <!-- Botões superiores -->
+        <div class="menu-top-buttons">
+            <button class="menu-btn account-btn" id="accountBtn">Account</button>
+            <button class="menu-btn shop-btn" id="menuShopBtn">
+                <span class="star-icon">★</span> Shop
+            </button>
+        </div>
+
+        <!-- Scoreboard lateral -->
+        <div class="menu-scoreboard">
+            <div class="scoreboard-header">
+                <span class="menu-icon">◀</span> MENU
+            </div>
+            <div class="scoreboard-title">Score</div>
+            <div class="scoreboard-list" id="menuLeaderboard">
+                <div class="score-entry">
+                    <span class="score-bar" style="--bar-width: 100%; --bar-color: #43a047;"></span>
+                    <span class="score-name">Aguardando...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container central -->
+        <div class="menu-center">
+            <!-- Logo -->
+            <div class="diep-logo">
+                <h1>NIMBUS<span class="logo-io">.IO</span></h1>
+            </div>
+
+            <!-- Seletores -->
+            <div class="menu-selectors">
+                <div class="selector-group">
+                    <label class="selector-label">Game Mode</label>
+                    <div class="custom-select" id="gameModeSelect">
+                        <div class="select-selected">FFA</div>
+                        <div class="select-items select-hide">
+                            <div class="select-option selected" data-value="ffa">FFA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selector-group">
+                    <label class="selector-label">Region</label>
+                    <div class="custom-select region-select" id="regionSelect">
+                        <div class="select-selected">
+                            <span class="flag-br">🇧🇷</span> São Paulo <span class="player-count">(0)</span>
+                        </div>
+                        <div class="select-items select-hide">
+                            <div class="select-option selected" data-value="sao-paulo">
+                                <span class="flag-br">🇧🇷</span> São Paulo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input de nome -->
+            <input type="text" id="playerName" placeholder="Seu nome de bruxo..." maxlength="15">
+
+            <!-- Botão Play -->
+            <button id="playBtn">Play!</button>
+        </div>
+
+        <!-- Notificação de update (opcional) -->
+        <div class="update-notice hidden">
+            <span class="new-badge">NEW!</span>
+            New update available!
+        </div>
+    </div>
+
+    <!-- Canvas do jogo -->
+    <canvas id="gameCanvas" tabindex="1"></canvas>
+
+    <!-- HUD do jogo -->
+    <div id="hud" class="hidden">
+        <!-- Barra de XP -->
+        <div id="xpBar">
+            <div id="xpFill"></div>
+            <span id="levelText">Ano 1</span>
+        </div>
+
+        <!-- Barra de Mana -->
+        <div id="manaBar">
+            <div id="manaFill"></div>
+            <span id="manaText">MANA</span>
+        </div>
+
+        <!-- Barra de Speed Boost -->
+        <div id="speedBar">
+            <div id="speedFill"></div>
+            <span id="speedText">BOOST</span>
+            <span id="speedKey">SHIFT</span>
+        </div>
+
+        <!-- Magias disponíveis -->
+        <div id="spellsBar">
+            <div class="spell-slot" data-spell="1">
+                <div class="spell-icon stupefy"></div>
+                <div class="spell-cooldown"></div>
+                <span class="spell-key">1</span>
+                <span class="spell-name">Stupefy</span>
+            </div>
+            <div class="spell-slot" data-spell="2">
+                <div class="spell-icon incendio"></div>
+                <div class="spell-cooldown"></div>
+                <span class="spell-key">2</span>
+                <span class="spell-name">Incendio</span>
+            </div>
+            <div class="spell-slot" data-spell="3">
+                <div class="spell-icon glacius"></div>
+                <div class="spell-cooldown"></div>
+                <span class="spell-key">3</span>
+                <span class="spell-name">Glacius</span>
+            </div>
+            <div class="spell-slot" data-spell="4">
+                <div class="spell-icon bombarda"></div>
+                <div class="spell-cooldown"></div>
+                <span class="spell-key">4</span>
+                <span class="spell-name">Bombarda</span>
+            </div>
+            <div class="spell-slot" data-spell="5">
+                <div class="spell-icon protego"></div>
+                <div class="spell-cooldown"></div>
+                <span class="spell-key">5</span>
+                <span class="spell-name">Protego</span>
+            </div>
+        </div>
+
+        <!-- Stats para upgrade -->
+        <div id="statsPanel" class="hidden">
+            <div class="stats-header">
+                <span class="stats-title">Habilidades Mágicas</span>
+            </div>
+            <div class="stat-row" data-stat="manaRegen">
+                <span class="stat-name">Regeneração de Mana</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[U]</span>
+            </div>
+            <div class="stat-row" data-stat="maxMana">
+                <span class="stat-name">Mana Máxima</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[I]</span>
+            </div>
+            <div class="stat-row" data-stat="spellPower">
+                <span class="stat-name">Poder Mágico</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[O]</span>
+            </div>
+            <div class="stat-row" data-stat="spellSpeed">
+                <span class="stat-name">Velocidade de Feitiço</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[P]</span>
+            </div>
+            <div class="stat-row" data-stat="castSpeed">
+                <span class="stat-name">Velocidade de Conjuração</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[J]</span>
+            </div>
+            <div class="stat-row" data-stat="broomSpeed">
+                <span class="stat-name">Velocidade da Vassoura</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[K]</span>
+            </div>
+            <div class="stat-row" data-stat="maxHealth">
+                <span class="stat-name">Vitalidade</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[L]</span>
+            </div>
+            <div class="stat-row" data-stat="healthRegen">
+                <span class="stat-name">Regeneração de Vida</span>
+                <div class="stat-bar"><div class="stat-fill"></div></div>
+                <span class="stat-key">[;]</span>
+            </div>
+            <div id="statPoints">Pontos de Talento: <span>0</span></div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="leaderboard">
+            <h3>Melhores Bruxos</h3>
+            <ol id="leaderboardList"></ol>
+        </div>
+
+        <!-- Minimap -->
+        <canvas id="minimap" width="150" height="150"></canvas>
+
+        <!-- Mensagens de kill -->
+        <div id="killFeed"></div>
+
+        <!-- Score -->
+        <div id="scoreDisplay">
+            <span class="score-icon"></span>
+            <span class="score-label">Pontos:</span>
+            <span class="score-value">0</span>
+        </div>
+
+        <!-- Gold display -->
+        <div id="goldDisplay">
+            <span class="gold-icon"></span>
+            <span class="gold-value">0</span>
+            <button id="shopBtn">LOJA [B]</button>
+        </div>
+
+        <!-- Botão do Spellbook -->
+        <button id="spellbookBtn" title="Grimório de Spell Weaving">📖 [TAB]</button>
+    </div>
+
+    <!-- Loja -->
+    <div id="shopPanel" class="hidden">
+        <div class="shop-container">
+            <div class="shop-header">
+                <h2>Loja Mágica</h2>
+                <div class="shop-gold">
+                    <span class="gold-icon"></span>
+                    <span id="shopGoldValue">0</span>
+                </div>
+                <button id="closeShopBtn">X</button>
+            </div>
+
+            <div class="shop-tabs">
+                <button class="shop-tab active" data-tab="wizards">Bruxos</button>
+                <button class="shop-tab" data-tab="brooms">Vassouras</button>
+                <button class="shop-tab" data-tab="cosmetics">Cosmeticos</button>
+            </div>
+
+            <div class="shop-content">
+                <!-- Skins de Bruxo -->
+                <div class="shop-section" id="wizardsSection">
+                    <div class="shop-item" data-item="wizard_dark" data-price="500">
+                        <div class="item-preview wizard-dark"></div>
+                        <div class="item-info">
+                            <span class="item-name">Bruxo das Trevas</span>
+                            <span class="item-price"><span class="gold-icon"></span>500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wizard_ice" data-price="500">
+                        <div class="item-preview wizard-ice"></div>
+                        <div class="item-info">
+                            <span class="item-name">Mago do Gelo</span>
+                            <span class="item-price"><span class="gold-icon"></span>500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wizard_fire" data-price="500">
+                        <div class="item-preview wizard-fire"></div>
+                        <div class="item-info">
+                            <span class="item-name">Mago do Fogo</span>
+                            <span class="item-price"><span class="gold-icon"></span>500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wizard_gold" data-price="1000">
+                        <div class="item-preview wizard-gold"></div>
+                        <div class="item-info">
+                            <span class="item-name">Bruxo Dourado</span>
+                            <span class="item-price"><span class="gold-icon"></span>1000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wizard_shadow" data-price="1500">
+                        <div class="item-preview wizard-shadow"></div>
+                        <div class="item-info">
+                            <span class="item-name">Bruxo Sombrio</span>
+                            <span class="item-price"><span class="gold-icon"></span>1500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wizard_ancient" data-price="2000">
+                        <div class="item-preview wizard-ancient"></div>
+                        <div class="item-info">
+                            <span class="item-name">Mago Ancestral</span>
+                            <span class="item-price"><span class="gold-icon"></span>2000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                </div>
+
+                <!-- Skins de Vassoura -->
+                <div class="shop-section hidden" id="broomsSection">
+                    <div class="shop-item" data-item="broom_nimbus" data-price="300">
+                        <div class="item-preview broom-nimbus"></div>
+                        <div class="item-info">
+                            <span class="item-name">Nimbus 2000</span>
+                            <span class="item-price"><span class="gold-icon"></span>300</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="broom_firebolt" data-price="600">
+                        <div class="item-preview broom-firebolt"></div>
+                        <div class="item-info">
+                            <span class="item-name">Firebolt</span>
+                            <span class="item-price"><span class="gold-icon"></span>600</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="broom_lightning" data-price="800">
+                        <div class="item-preview broom-lightning"></div>
+                        <div class="item-info">
+                            <span class="item-name">Lightning Bolt</span>
+                            <span class="item-price"><span class="gold-icon"></span>800</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="broom_phoenix" data-price="1200">
+                        <div class="item-preview broom-phoenix"></div>
+                        <div class="item-info">
+                            <span class="item-name">Phoenix Wing</span>
+                            <span class="item-price"><span class="gold-icon"></span>1200</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="broom_dragon" data-price="1800">
+                        <div class="item-preview broom-dragon"></div>
+                        <div class="item-info">
+                            <span class="item-name">Dragon Rider</span>
+                            <span class="item-price"><span class="gold-icon"></span>1800</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                </div>
+
+                <!-- Cosmeticos -->
+                <div class="shop-section hidden" id="cosmeticsSection">
+                    <!-- Nomes Rainbow -->
+                    <div class="shop-category-title">Nomes Especiais</div>
+                    <div class="shop-item cosmetic-item" data-item="name_rainbow" data-price="800" data-type="nameEffect">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-name rainbow-text">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Nome Rainbow</span>
+                            <span class="item-price"><span class="gold-icon"></span>800</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="name_fire" data-price="600" data-type="nameEffect">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-name fire-text">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Nome Flamejante</span>
+                            <span class="item-price"><span class="gold-icon"></span>600</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="name_ice" data-price="600" data-type="nameEffect">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-name ice-text">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Nome Congelante</span>
+                            <span class="item-price"><span class="gold-icon"></span>600</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="name_golden" data-price="1000" data-type="nameEffect">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-name golden-text">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Nome Dourado</span>
+                            <span class="item-price"><span class="gold-icon"></span>1000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="shop-category-title">Tags de Titulo</div>
+                    <div class="shop-item cosmetic-item" data-item="tag_vip" data-price="1500" data-type="tag">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-tag tag-vip">VIP</span>
+                            <span class="preview-name-small">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Tag VIP</span>
+                            <span class="item-price"><span class="gold-icon"></span>1500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="tag_pro" data-price="1200" data-type="tag">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-tag tag-pro">PRO</span>
+                            <span class="preview-name-small">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Tag PRO</span>
+                            <span class="item-price"><span class="gold-icon"></span>1200</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="tag_legend" data-price="2000" data-type="tag">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-tag tag-legend">LENDA</span>
+                            <span class="preview-name-small">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Tag Lenda</span>
+                            <span class="item-price"><span class="gold-icon"></span>2000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="tag_mystic" data-price="1800" data-type="tag">
+                        <div class="item-preview cosmetic-preview">
+                            <span class="preview-tag tag-mystic">MISTICO</span>
+                            <span class="preview-name-small">Bruxo</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Tag Mistico</span>
+                            <span class="item-price"><span class="gold-icon"></span>1800</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+
+                    <!-- Efeitos de Aura -->
+                    <div class="shop-category-title">Efeitos de Aura</div>
+                    <div class="shop-item cosmetic-item" data-item="aura_fire" data-price="2000" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-fire"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura de Fogo</span>
+                            <span class="item-price"><span class="gold-icon"></span>2000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="aura_ice" data-price="2000" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-ice"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura de Gelo</span>
+                            <span class="item-price"><span class="gold-icon"></span>2000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="aura_lightning" data-price="2500" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-lightning"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura de Raio</span>
+                            <span class="item-price"><span class="gold-icon"></span>2500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="aura_dark" data-price="3000" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-dark"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura das Trevas</span>
+                            <span class="item-price"><span class="gold-icon"></span>3000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="aura_rainbow" data-price="5000" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-rainbow"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura Prismatica</span>
+                            <span class="item-price"><span class="gold-icon"></span>5000</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item cosmetic-item" data-item="aura_stars" data-price="2500" data-type="aura">
+                        <div class="item-preview cosmetic-preview aura-preview">
+                            <div class="aura-demo aura-stars"></div>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">Aura Estelar</span>
+                            <span class="item-price"><span class="gold-icon"></span>2500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Livro de Magia (Spellbook) - Sistema de Combos -->
+    <div id="spellbookPanel" class="hidden">
+        <div class="spellbook-container">
+            <div class="spellbook-header">
+                <div class="spellbook-title">
+                    <span class="spellbook-icon">📖</span>
+                    <h2>Grimório de Spell Weaving</h2>
+                </div>
+                <div class="spellbook-subtitle">A Arte de Tecer Feitiços</div>
+                <button id="closeSpellbookBtn">✕</button>
+            </div>
+
+            <div class="spellbook-intro">
+                <p>Pressione as teclas de magia em <strong>sequência rápida</strong> para desencadear feitiços devastadores!</p>
+                <p class="spellbook-hint">⏱️ Janela de tempo: <strong>1.5 segundos</strong> | Pressione <kbd>TAB</kbd> ou <kbd>G</kbd> para abrir este grimório</p>
+            </div>
+
+            <div class="spellbook-tabs">
+                <button class="spellbook-tab active" data-category="basic">Básicos (3 teclas)</button>
+                <button class="spellbook-tab" data-category="intermediate">Intermediários (4 teclas)</button>
+                <button class="spellbook-tab" data-category="advanced">Avançados (5 teclas)</button>
+            </div>
+
+            <div class="spellbook-content">
+                <!-- COMBOS BÁSICOS (3 teclas) -->
+                <div class="spell-category" id="basicCombos">
+                    <div class="combo-card" data-combo="stunning_fire">
+                        <div class="combo-header" style="--combo-color: #FF6B35">
+                            <span class="combo-icon">🔥⚡</span>
+                            <div class="combo-title">
+                                <h3>Fogo Atordoante</h3>
+                                <span class="combo-subtitle">Stunning Fire</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                        </div>
+                        <div class="combo-description">
+                            Stupefy potencializado com chamas ardentes. Atordoa e queima o inimigo simultaneamente.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 55 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 45 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 6s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag stun">Atordoamento</span>
+                            <span class="effect-tag burn">Queimadura</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="frozen_paralysis">
+                        <div class="combo-header" style="--combo-color: #00D4FF">
+                            <span class="combo-icon">❄️⚡</span>
+                            <div class="combo-title">
+                                <h3>Paralisia Gélida</h3>
+                                <span class="combo-subtitle">Frozen Paralysis</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                        </div>
+                        <div class="combo-description">
+                            Congela e atordoa o inimigo, deixando-o completamente imóvel.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 45 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 50 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 7s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag freeze">Congelamento</span>
+                            <span class="effect-tag stun">Atordoamento</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="steam_blast">
+                        <div class="combo-header" style="--combo-color: #B8B8B8">
+                            <span class="combo-icon">💨🔥</span>
+                            <div class="combo-title">
+                                <h3>Vapor Explosivo</h3>
+                                <span class="combo-subtitle">Steam Blast</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                        </div>
+                        <div class="combo-description">
+                            Fogo e gelo criam uma explosão de vapor devastadora em área.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 60 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 55 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 8s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag aoe">Área de Efeito</span>
+                            <span class="effect-tag slow">Lentidão</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="triple_stupefy">
+                        <div class="combo-header" style="--combo-color: #FF4444">
+                            <span class="combo-icon">⚡⚡⚡</span>
+                            <div class="combo-title">
+                                <h3>Stupefy Triplo</h3>
+                                <span class="combo-subtitle">Triple Stupefy</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                        </div>
+                        <div class="combo-description">
+                            Dispara três raios de atordoamento em leque, cobrindo grande área.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 20×3 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 40 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 5s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag spread">Dispersão</span>
+                            <span class="effect-tag stun">Atordoamento</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMBOS INTERMEDIÁRIOS (4 teclas) -->
+                <div class="spell-category hidden" id="intermediateCombos">
+                    <div class="combo-card" data-combo="elemental_storm">
+                        <div class="combo-header" style="--combo-color: #9B59B6">
+                            <span class="combo-icon">🌪️✨</span>
+                            <div class="combo-title">
+                                <h3>Tempestade Elemental</h3>
+                                <span class="combo-subtitle">Elemental Storm</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                        </div>
+                        <div class="combo-description">
+                            Canaliza todos os elementos em um único projétil devastador.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 80 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 70 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 12s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag burn">Queimadura</span>
+                            <span class="effect-tag slow">Lentidão</span>
+                            <span class="effect-tag stun">Atordoamento</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="glacial_inferno">
+                        <div class="combo-header" style="--combo-color: #E74C3C">
+                            <span class="combo-icon">🔥❄️</span>
+                            <div class="combo-title">
+                                <h3>Inferno Glacial</h3>
+                                <span class="combo-subtitle">Glacial Inferno</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                        </div>
+                        <div class="combo-description">
+                            Paradoxo de fogo e gelo que explode em área massiva.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 70 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 65 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 10s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag burn">Queimadura</span>
+                            <span class="effect-tag freeze">Congelamento</span>
+                            <span class="effect-tag aoe">Área de Efeito</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="arcane_avalanche">
+                        <div class="combo-header" style="--combo-color: #3498DB">
+                            <span class="combo-icon">❄️🏔️</span>
+                            <div class="combo-title">
+                                <h3>Avalanche Arcana</h3>
+                                <span class="combo-subtitle">Arcane Avalanche</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                        </div>
+                        <div class="combo-description">
+                            Onda de gelo devastadora que congela e empurra inimigos.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 55 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 60 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 9s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag freeze">Congelamento</span>
+                            <span class="effect-tag knockback">Empurrão</span>
+                            <span class="effect-tag aoe">Área de Efeito</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card" data-combo="reactive_shield">
+                        <div class="combo-header" style="--combo-color: #F1C40F">
+                            <span class="combo-icon">🛡️⚡</span>
+                            <div class="combo-title">
+                                <h3>Escudo Reativo</h3>
+                                <span class="combo-subtitle">Reactive Shield</span>
+                            </div>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key protego">5</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                        </div>
+                        <div class="combo-description">
+                            Escudo elemental que reflete dano aos atacantes.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">🛡️</span> 5s duração</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 75 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 15s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag shield">Escudo</span>
+                            <span class="effect-tag reflect">Reflexão</span>
+                            <span class="effect-tag thorns">Espinhos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMBOS AVANÇADOS (5 teclas) -->
+                <div class="spell-category hidden" id="advancedCombos">
+                    <div class="combo-card legendary" data-combo="arcane_apocalypse">
+                        <div class="combo-header" style="--combo-color: #8E44AD">
+                            <span class="combo-icon">💀🔥</span>
+                            <div class="combo-title">
+                                <h3>Apocalipse Arcano</h3>
+                                <span class="combo-subtitle">Arcane Apocalypse</span>
+                            </div>
+                            <span class="combo-tier legendary">LENDÁRIO</span>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key bombarda">4</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key bombarda">4</span>
+                        </div>
+                        <div class="combo-description">
+                            O feitiço mais devastador. Causa destruição total em uma área massiva.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 120 dano</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 100 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 20s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag mega-aoe">Mega Área</span>
+                            <span class="effect-tag burn">Queimadura</span>
+                            <span class="effect-tag slow">Lentidão</span>
+                            <span class="effect-tag stun">Atordoamento</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card legendary" data-combo="elemental_harmony">
+                        <div class="combo-header" style="--combo-color: #00FF88">
+                            <span class="combo-icon">✨🌈</span>
+                            <div class="combo-title">
+                                <h3>Harmonia dos Elementos</h3>
+                                <span class="combo-subtitle">Elemental Harmony</span>
+                            </div>
+                            <span class="combo-tier legendary">LENDÁRIO</span>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key bombarda">4</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key protego">5</span>
+                        </div>
+                        <div class="combo-description">
+                            Fusão perfeita de todas as magias. Causa dano e cura o conjurador.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 100 dano</div>
+                            <div class="stat"><span class="stat-icon">💚</span> +30 HP</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 90 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 18s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag all-elements">Todos Elementos</span>
+                            <span class="effect-tag heal">Cura</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card legendary" data-combo="explosive_fortress">
+                        <div class="combo-header" style="--combo-color: #E67E22">
+                            <span class="combo-icon">🛡️💥</span>
+                            <div class="combo-title">
+                                <h3>Fortaleza Explosiva</h3>
+                                <span class="combo-subtitle">Explosive Fortress</span>
+                            </div>
+                            <span class="combo-tier legendary">LENDÁRIO</span>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key protego">5</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key protego">5</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key bombarda">4</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key bombarda">4</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                        </div>
+                        <div class="combo-description">
+                            Escudo instável que explode violentamente ao acabar.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">🛡️</span> 4s duração</div>
+                            <div class="stat"><span class="stat-icon">💥</span> 90 dano AoE</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 85 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 16s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag shield">Escudo</span>
+                            <span class="effect-tag delayed-explosion">Explosão Atrasada</span>
+                        </div>
+                    </div>
+
+                    <div class="combo-card legendary" data-combo="primordial_cyclone">
+                        <div class="combo-header" style="--combo-color: #1ABC9C">
+                            <span class="combo-icon">🌀⚡</span>
+                            <div class="combo-title">
+                                <h3>Ciclone Primordial</h3>
+                                <span class="combo-subtitle">Primordial Cyclone</span>
+                            </div>
+                            <span class="combo-tier legendary">LENDÁRIO</span>
+                        </div>
+                        <div class="combo-sequence">
+                            <span class="seq-key glacius">3</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key stupefy">1</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key incendio">2</span>
+                            <span class="seq-arrow">→</span>
+                            <span class="seq-key glacius">3</span>
+                        </div>
+                        <div class="combo-description">
+                            Vórtice elemental que puxa inimigos para o centro e causa dano contínuo.
+                        </div>
+                        <div class="combo-stats">
+                            <div class="stat"><span class="stat-icon">💥</span> 75 dano</div>
+                            <div class="stat"><span class="stat-icon">🧲</span> Atração</div>
+                            <div class="stat"><span class="stat-icon">💧</span> 80 mana</div>
+                            <div class="stat"><span class="stat-icon">⏰</span> 14s cooldown</div>
+                        </div>
+                        <div class="combo-effects">
+                            <span class="effect-tag pull">Atração</span>
+                            <span class="effect-tag dot">Dano Contínuo</span>
+                            <span class="effect-tag aoe">Área de Efeito</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="spellbook-footer">
+                <div class="legend">
+                    <span class="legend-item"><span class="seq-key stupefy">1</span> Stupefy</span>
+                    <span class="legend-item"><span class="seq-key incendio">2</span> Incendio</span>
+                    <span class="legend-item"><span class="seq-key glacius">3</span> Glacius</span>
+                    <span class="legend-item"><span class="seq-key bombarda">4</span> Bombarda</span>
+                    <span class="legend-item"><span class="seq-key protego">5</span> Protego</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Display de Combo Ativo -->
+    <div id="comboDisplay" class="hidden">
+        <div class="combo-buffer"></div>
+        <div class="combo-hint"></div>
+    </div>
+
+    <!-- Feedback de Combo Executado -->
+    <div id="comboFeedback"></div>
+
+    <!-- Tela de morte -->
+    <div id="deathScreen" class="hidden">
+        <div class="death-container">
+            <div class="death-icon"></div>
+            <h2>Você foi derrotado!</h2>
+            <p class="death-score">Pontuação final: <span id="finalScore">0</span></p>
+            <p class="death-killer">Derrotado por: <span id="killedBy">Unknown</span></p>
+            <button id="respawnBtn">
+                <span>RENASCER</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/input.js"></script>
+    <script src="js/network.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

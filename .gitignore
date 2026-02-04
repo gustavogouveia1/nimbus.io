@@ -1,0 +1,51 @@
+# Dependências
+/vendor/
+/server/vendor/
+/node_modules/
+composer.lock
+package-lock.json
+
+# Arquivos de ambiente e configuração sensível
+.env
+.env.*
+*.local
+config.local.php
+config.local.json
+
+# Logs
+*.log
+logs/
+/server/logs/
+
+# Cache
+/cache/
+*.cache
+.phpunit.cache/
+
+# IDE e editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Sistema operacional
+*.tmp
+*.temp
+
+# Build e compilados
+/dist/
+/build/
+
+# Testes
+/coverage/
+.phpunit.result.cache
+
+# Credenciais e chaves
+*.pem
+*.key
+*.crt
+credentials.json
+secrets.json
