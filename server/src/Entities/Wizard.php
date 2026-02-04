@@ -433,7 +433,7 @@ class Wizard
 
     public function getBodyDamage(): int
     {
-        return 8 + ($this->level * 0.5);
+        return (int)(8 + ($this->level * 0.5));
     }
 
     public function respawn(float $x, float $y): void
