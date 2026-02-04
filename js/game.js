@@ -2303,12 +2303,32 @@ const Game = {
         }
 
         // ====== ROTAÇÃO COMPLETA DO JOGADOR (BONECO + VASSOURA) ======
+        // Detecta se está mirando para a esquerda (ângulo > 90° ou < -90°)
+        const facingLeft = Math.cos(playerAngle) < 0;
+
+        // Calcula o flip suave para transição fluida
+        const smoothFlip = this.wizardFlipState = this.wizardFlipState || {};
+
+        // Interpolação suave do estado de flip por jogador
+        if (!smoothFlip[player.id]) {
+            smoothFlip[player.id] = { flip: facingLeft ? -1 : 1, targetFlip: facingLeft ? -1 : 1 };
+        }
+        smoothFlip[player.id].targetFlip = facingLeft ? -1 : 1;
+        // Interpolação rápida mas suave (0.25 = ~4 frames para completar)
+        smoothFlip[player.id].flip += (smoothFlip[player.id].targetFlip - smoothFlip[player.id].flip) * 0.25;
+
+        const currentFlip = smoothFlip[player.id].flip;
+
         // Primeiro aplica a rotação principal (direção que está olhando)
         ctx.rotate(playerAngle);
 
+        // Aplica o flip vertical suave (mantém o bruxo "de pé" quando mira para esquerda)
+        ctx.scale(1, currentFlip);
+
         // Depois aplica o banking (inclinação lateral durante curvas)
         // Banking se aplica a TODO o jogador (vassoura + bruxo) para visual profissional
-        ctx.rotate(totalBanking);
+        // Inverte o banking quando flipado para manter a física correta
+        ctx.rotate(totalBanking * currentFlip);
 
         // ====== PIXEL ART WIZARD ======
 
