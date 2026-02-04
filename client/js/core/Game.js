@@ -2,6 +2,10 @@
  * Nimbus.io - Batalha de Bruxos
  * Game Loop e Renderização - Estilo Pixel Art
  */
+console.log('=== Game.js carregado ===');
+console.log('MAP_CONFIG disponível:', typeof MAP_CONFIG !== 'undefined');
+console.log('MapRenderer disponível:', typeof MapRenderer !== 'undefined');
+
 const Game = {
     canvas: null,
     ctx: null,
@@ -22,6 +26,7 @@ const Game = {
     // Configuração do mapa
     mapWidth: 3000,
     mapHeight: 3000,
+    mapConfig: null,
 
     // Câmera
     camera: {
@@ -407,6 +412,9 @@ const Game = {
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
+        // Carrega configuração do mapa
+        this.loadMapConfig();
+
         // Inicializa input
         Input.init();
 
@@ -424,6 +432,107 @@ const Game = {
 
         // Inicia o modo de fundo do menu (formas flutuantes estilo Diep.io)
         this.initBackgroundMode();
+
+        // Inicializa o conteúdo do Spellbook
+        this.initSpellbook();
+    },
+
+    // Inicializa o conteúdo do Spellbook com os combos do Input
+    initSpellbook() {
+        if (typeof Input === 'undefined' || !Input.spellCombos) return;
+
+        const basicContainer = document.getElementById('basicCombos');
+        const intermediateContainer = document.getElementById('intermediateCombos');
+        const advancedContainer = document.getElementById('advancedCombos');
+
+        if (!basicContainer || !intermediateContainer || !advancedContainer) return;
+
+        // Limpa containers
+        basicContainer.innerHTML = '';
+        intermediateContainer.innerHTML = '';
+        advancedContainer.innerHTML = '';
+
+        // Organiza combos por tamanho
+        const combos = Object.entries(Input.spellCombos);
+
+        combos.forEach(([key, combo]) => {
+            const sequenceLen = combo.sequence.length;
+            const comboHtml = this.createComboHtml(key, combo);
+
+            if (sequenceLen === 3) {
+                basicContainer.innerHTML += comboHtml;
+            } else if (sequenceLen === 4) {
+                intermediateContainer.innerHTML += comboHtml;
+            } else if (sequenceLen === 5) {
+                advancedContainer.innerHTML += comboHtml;
+            }
+        });
+    },
+
+    // Cria HTML para um combo
+    createComboHtml(key, combo) {
+        const spellClasses = {
+            1: 'stupefy',
+            2: 'incendio',
+            3: 'glacius',
+            4: 'bombarda',
+            5: 'protego'
+        };
+
+        const sequenceHtml = combo.sequence.map(num =>
+            `<span class="seq-key ${spellClasses[num]}">${num}</span>`
+        ).join('');
+
+        const effectsHtml = combo.effects.map(effect => {
+            // Converte underscore para hífen e usa como classe CSS
+            const effectClass = effect.replace(/_/g, '-');
+            return `<span class="effect-tag ${effectClass}">${effect}</span>`;
+        }).join('');
+
+        return `
+            <div class="combo-card">
+                <div class="combo-header">
+                    <span class="combo-icon">${combo.icon}</span>
+                    <div class="combo-title">
+                        <h3 style="color: ${combo.color}">${combo.name}</h3>
+                        <span class="combo-name-en">${combo.nameEn}</span>
+                    </div>
+                </div>
+                <div class="combo-sequence">${sequenceHtml}</div>
+                <p class="combo-desc">${combo.description}</p>
+                <div class="combo-stats">
+                    <span class="stat"><span class="stat-icon">💧</span>${combo.manaCost}</span>
+                    <span class="stat"><span class="stat-icon">⚔️</span>${combo.damage}</span>
+                    <span class="stat"><span class="stat-icon">⏱️</span>${combo.cooldown}s</span>
+                </div>
+                <div class="combo-effects">${effectsHtml}</div>
+            </div>
+        `;
+    },
+
+    loadMapConfig() {
+        console.log('[Game] loadMapConfig() chamado');
+        console.log('[Game] MAP_CONFIG existe?', typeof MAP_CONFIG !== 'undefined');
+
+        // Usa a configuração global MAP_CONFIG definida em MapConfig.js
+        if (typeof MAP_CONFIG !== 'undefined') {
+            this.mapConfig = MAP_CONFIG;
+            this.mapWidth = MAP_CONFIG.width || 6000;
+            this.mapHeight = MAP_CONFIG.height || 6000;
+            this.gridSize = MAP_CONFIG.gridSize || 60;
+
+            console.log('Map config carregado:', this.mapConfig.theme);
+
+            // Inicializa o MapRenderer
+            if (typeof MapRenderer !== 'undefined') {
+                MapRenderer.init(this.canvas, this.ctx, this.mapConfig);
+                console.log('MapRenderer inicializado com sucesso!');
+            }
+        } else {
+            console.warn('MAP_CONFIG não encontrado, usando valores padrão');
+            this.mapWidth = 6000;
+            this.mapHeight = 6000;
+        }
     },
 
     resize() {
@@ -465,8 +574,13 @@ const Game = {
         try {
             // Define callbacks especiais para o modo espectador
             Network.onConfig = (msg) => {
-                this.mapWidth = msg.mapWidth;
-                this.mapHeight = msg.mapHeight;
+                this.mapWidth = msg.mapWidth || this.mapWidth;
+                this.mapHeight = msg.mapHeight || this.mapHeight;
+                // NÃO sobrescrever mapConfig se já temos o MAP_CONFIG local
+                // O servidor pode não enviar mapConfig
+
+                console.log('Config recebida do servidor:', msg);
+
                 // Posiciona a câmera no centro do mapa inicialmente
                 this.spectatorCamera.x = this.mapWidth / 2 - this.canvas.width / 2;
                 this.spectatorCamera.y = this.mapHeight / 2 - this.canvas.height / 2;
@@ -562,8 +676,14 @@ const Game = {
         this.camera.x = this.spectatorCamera.x;
         this.camera.y = this.spectatorCamera.y;
 
-        // Renderiza o jogo normal
-        this.drawBackground();
+        // Renderiza o mapa da Floresta Proibida
+        if (this.mapConfig && typeof MapRenderer !== 'undefined') {
+            MapRenderer.update(this.deltaTime * 0.016);
+            MapRenderer.render(this.camera.x, this.camera.y);
+        } else {
+            this.drawBackground();
+        }
+
         this.drawGrid();
         this.drawMapBounds();
         this.drawParticles('ambient');
@@ -588,8 +708,10 @@ const Game = {
 
     setupNetworkCallbacks() {
         Network.onConfig = (msg) => {
-            this.mapWidth = msg.mapWidth;
-            this.mapHeight = msg.mapHeight;
+            console.log('[setupNetworkCallbacks] Config recebida:', msg);
+            this.mapWidth = msg.mapWidth || this.mapWidth;
+            this.mapHeight = msg.mapHeight || this.mapHeight;
+            // NÃO sobrescrever mapConfig - usamos o MAP_CONFIG local
         };
 
         Network.onJoined = (msg) => {
@@ -1467,8 +1589,19 @@ const Game = {
     render() {
         const ctx = this.ctx;
 
-        // Fundo mágico
-        this.drawBackground();
+        // Renderiza o mapa da Floresta Proibida
+        if (this.mapConfig && typeof MapRenderer !== 'undefined') {
+            MapRenderer.update(this.deltaTime * 0.016);
+            MapRenderer.render(this.camera.x, this.camera.y);
+        } else {
+            // Fallback: fundo mágico original
+            this.drawBackground();
+            // Log apenas uma vez para não spammar
+            if (!this._loggedNoMap) {
+                console.log('[render] Usando fundo padrão - mapConfig:', this.mapConfig, 'MapRenderer:', typeof MapRenderer);
+                this._loggedNoMap = true;
+            }
+        }
 
         // Grid estilo Hogwarts
         this.drawGrid();
@@ -1620,13 +1753,14 @@ const Game = {
         const bottom = this.mapHeight - this.camera.y;
 
         const fogSize = 300;
-        const fogColor = 'rgba(20, 8, 40, 0.95)';
+        // Mudou de roxo para verde escuro para combinar com a floresta
+        const fogColor = 'rgba(5, 20, 5, 0.95)';
 
         // Bordas com névoa
         if (left > -fogSize) {
             const gradient = ctx.createLinearGradient(left, 0, left - fogSize, 0);
             gradient.addColorStop(0, fogColor);
-            gradient.addColorStop(1, 'rgba(20, 8, 40, 0)');
+            gradient.addColorStop(1, 'rgba(5, 20, 5, 0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(left - fogSize, 0, fogSize, this.canvas.height);
             ctx.fillStyle = fogColor;
@@ -1636,7 +1770,7 @@ const Game = {
         if (right < this.canvas.width + fogSize) {
             const gradient = ctx.createLinearGradient(right, 0, right + fogSize, 0);
             gradient.addColorStop(0, fogColor);
-            gradient.addColorStop(1, 'rgba(20, 8, 40, 0)');
+            gradient.addColorStop(1, 'rgba(5, 20, 5, 0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(right, 0, fogSize, this.canvas.height);
             ctx.fillStyle = fogColor;
@@ -1646,7 +1780,7 @@ const Game = {
         if (top > -fogSize) {
             const gradient = ctx.createLinearGradient(0, top, 0, top - fogSize);
             gradient.addColorStop(0, fogColor);
-            gradient.addColorStop(1, 'rgba(20, 8, 40, 0)');
+            gradient.addColorStop(1, 'rgba(5, 20, 5, 0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, top - fogSize, this.canvas.width, fogSize);
             ctx.fillStyle = fogColor;
@@ -1656,7 +1790,7 @@ const Game = {
         if (bottom < this.canvas.height + fogSize) {
             const gradient = ctx.createLinearGradient(0, bottom, 0, bottom + fogSize);
             gradient.addColorStop(0, fogColor);
-            gradient.addColorStop(1, 'rgba(20, 8, 40, 0)');
+            gradient.addColorStop(1, 'rgba(5, 20, 5, 0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, bottom, this.canvas.width, fogSize);
             ctx.fillStyle = fogColor;
@@ -2303,12 +2437,27 @@ const Game = {
         }
 
         // ====== ROTAÇÃO COMPLETA DO JOGADOR (BONECO + VASSOURA) ======
-        // Primeiro aplica a rotação principal (direção que está olhando)
-        ctx.rotate(playerAngle);
+        // Detecta se está mirando para a esquerda (ângulo entre π/2 e 3π/2)
+        // Normaliza o ângulo para estar entre -π e π
+        let normalizedAngle = playerAngle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= Math.PI * 2;
+        while (normalizedAngle < -Math.PI) normalizedAngle += Math.PI * 2;
+
+        const facingLeft = Math.abs(normalizedAngle) > Math.PI / 2;
+
+        // Se estiver mirando para a esquerda, flipa o sprite verticalmente
+        // e ajusta o ângulo para manter a direção correta
+        if (facingLeft) {
+            ctx.scale(1, -1);
+            ctx.rotate(-playerAngle);
+        } else {
+            ctx.rotate(playerAngle);
+        }
 
         // Depois aplica o banking (inclinação lateral durante curvas)
         // Banking se aplica a TODO o jogador (vassoura + bruxo) para visual profissional
-        ctx.rotate(totalBanking);
+        const bankingDirection = facingLeft ? -1 : 1;
+        ctx.rotate(totalBanking * bankingDirection);
 
         // ====== PIXEL ART WIZARD ======
 
@@ -3219,13 +3368,20 @@ const Game = {
         const ctx = this.minimapCtx;
         const scale = 150 / this.mapWidth;
 
+        // Fundo da floresta proibida
         const gradient = ctx.createLinearGradient(0, 0, 150, 150);
-        gradient.addColorStop(0, 'rgba(45, 27, 78, 0.9)');
-        gradient.addColorStop(1, 'rgba(26, 10, 46, 0.9)');
+        gradient.addColorStop(0, 'rgba(20, 40, 20, 0.95)');
+        gradient.addColorStop(1, 'rgba(10, 20, 10, 0.95)');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 150, 150);
 
-        ctx.strokeStyle = 'rgba(212, 175, 55, 0.1)';
+        // Desenha obstaculos do mapa no minimap
+        if (this.mapConfig && typeof MapRenderer !== 'undefined') {
+            MapRenderer.drawMinimap(ctx, scale);
+        }
+
+        // Grid mais escuro para floresta
+        ctx.strokeStyle = 'rgba(100, 150, 100, 0.1)';
         ctx.lineWidth = 1;
         for (let i = 0; i < 150; i += 25) {
             ctx.beginPath();
