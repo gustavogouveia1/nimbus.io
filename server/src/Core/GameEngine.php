@@ -35,6 +35,12 @@ class GameEngine implements MessageComponentInterface
     protected float $mapWidth = 6000;
     protected float $mapHeight = 6000;
 
+    /** @var array Obstáculos do mapa com colisão */
+    protected array $mapObstacles = [];
+
+    /** @var array Configuração completa do mapa */
+    protected array $mapConfig = [];
+
     // Configurações de criaturas
     protected int $maxCreatures = 80;
     protected int $creatureSpawnRate = 30; // Ticks entre spawns
@@ -69,6 +75,9 @@ class GameEngine implements MessageComponentInterface
     {
         $this->clients = new \SplObjectStorage;
 
+        // Carrega configuração do mapa
+        $this->loadMapConfig();
+
         // Inicia o game loop usando o loop passado
         $loop->addPeriodicTimer(1/60, function() {
             $this->gameLoop();
@@ -86,8 +95,154 @@ class GameEngine implements MessageComponentInterface
 
         echo "Nimbus.io - Servidor iniciado (60 ticks/s)\n";
         echo "Mapa: {$this->mapWidth}x{$this->mapHeight}\n";
+        echo "Obstáculos: " . count($this->mapObstacles) . " elementos com colisão\n";
         echo "Bots: {$this->maxBots} bruxos IA\n";
         echo "Aguardando bruxos...\n";
+    }
+
+    /**
+     * Carrega configuração do mapa do arquivo JSON
+     */
+    protected function loadMapConfig(): void
+    {
+        $configPath = __DIR__ . '/../../../shared/game-config.json';
+        echo "Carregando config do mapa: {$configPath}\n";
+
+        if (file_exists($configPath)) {
+            $config = json_decode(file_get_contents($configPath), true);
+            if (isset($config['map'])) {
+                $this->mapConfig = $config['map'];
+                $this->mapWidth = $config['map']['width'] ?? 6000;
+                $this->mapHeight = $config['map']['height'] ?? 6000;
+
+                echo "Mapa carregado: tema=" . ($config['map']['theme'] ?? 'default') . "\n";
+
+                // Carrega obstáculos com colisão
+                if (isset($config['map']['obstacles'])) {
+                    foreach ($config['map']['obstacles'] as $obstacle) {
+                        if ($obstacle['collision'] ?? false) {
+                            $this->mapObstacles[] = $obstacle;
+                        }
+                    }
+                }
+            }
+        } else {
+            echo "AVISO: Arquivo de config não encontrado: {$configPath}\n";
+        }
+    }
+
+    /**
+     * Verifica se uma posição colide com algum obstáculo do mapa
+     */
+    public function checkObstacleCollision(float $x, float $y, float $size): ?array
+    {
+        foreach ($this->mapObstacles as $obstacle) {
+            if (isset($obstacle['radius'])) {
+                // Obstáculo circular (rochas)
+                $dx = $x - $obstacle['x'];
+                $dy = $y - $obstacle['y'];
+                $distance = sqrt($dx * $dx + $dy * $dy);
+                if ($distance < ($size + $obstacle['radius'])) {
+                    return $obstacle;
+                }
+            } else {
+                // Obstáculo retangular (árvores, ruínas)
+                $obstacleLeft = $obstacle['x'];
+                $obstacleRight = $obstacle['x'] + $obstacle['width'];
+                $obstacleTop = $obstacle['y'];
+                $obstacleBottom = $obstacle['y'] + $obstacle['height'];
+
+                // Encontra o ponto mais próximo no retângulo
+                $closestX = max($obstacleLeft, min($x, $obstacleRight));
+                $closestY = max($obstacleTop, min($y, $obstacleBottom));
+
+                $dx = $x - $closestX;
+                $dy = $y - $closestY;
+                $distance = sqrt($dx * $dx + $dy * $dy);
+
+                if ($distance < $size) {
+                    return $obstacle;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve colisão empurrando a entidade para fora do obstáculo
+     */
+    public function resolveObstacleCollision(float &$x, float &$y, float $size, float $oldX, float $oldY): void
+    {
+        $collision = $this->checkObstacleCollision($x, $y, $size);
+        if ($collision === null) {
+            return;
+        }
+
+        if (isset($collision['radius'])) {
+            // Colisão com obstáculo circular
+            $dx = $x - $collision['x'];
+            $dy = $y - $collision['y'];
+            $distance = sqrt($dx * $dx + $dy * $dy);
+
+            if ($distance > 0) {
+                $overlap = ($size + $collision['radius']) - $distance;
+                $nx = $dx / $distance;
+                $ny = $dy / $distance;
+                $x += $nx * $overlap;
+                $y += $ny * $overlap;
+            }
+        } else {
+            // Colisão com obstáculo retangular - tenta resolver por eixo
+            $obstacleLeft = $collision['x'];
+            $obstacleRight = $collision['x'] + $collision['width'];
+            $obstacleTop = $collision['y'];
+            $obstacleBottom = $collision['y'] + $collision['height'];
+
+            // Tenta mover apenas no eixo X
+            $testX = $x;
+            $testY = $oldY;
+            if ($this->checkObstacleCollision($testX, $testY, $size) === null) {
+                $y = $oldY;
+                return;
+            }
+
+            // Tenta mover apenas no eixo Y
+            $testX = $oldX;
+            $testY = $y;
+            if ($this->checkObstacleCollision($testX, $testY, $size) === null) {
+                $x = $oldX;
+                return;
+            }
+
+            // Se ambos falharem, volta para posição anterior
+            $x = $oldX;
+            $y = $oldY;
+        }
+    }
+
+    /**
+     * Verifica se uma posição é válida para spawn (sem colisão com obstáculos)
+     */
+    public function isValidSpawnPosition(float $x, float $y, float $size): bool
+    {
+        return $this->checkObstacleCollision($x, $y, $size) === null;
+    }
+
+    /**
+     * Encontra uma posição válida para spawn
+     */
+    public function findValidSpawnPosition(float $minX, float $maxX, float $minY, float $maxY, float $size): array
+    {
+        $maxAttempts = 50;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $x = mt_rand((int)$minX, (int)$maxX);
+            $y = mt_rand((int)$minY, (int)$maxY);
+            if ($this->isValidSpawnPosition($x, $y, $size)) {
+                return [$x, $y];
+            }
+        }
+        // Fallback: retorna posição aleatória mesmo assim
+        return [mt_rand((int)$minX, (int)$maxX), mt_rand((int)$minY, (int)$maxY)];
     }
 
     public function onOpen(ConnectionInterface $conn): void
@@ -95,12 +250,16 @@ class GameEngine implements MessageComponentInterface
         $this->clients->attach($conn);
         echo "Nova conexão mágica: {$conn->resourceId}\n";
 
-        // Envia configuração inicial do mapa
-        $conn->send(json_encode([
+        // Envia configuração inicial do mapa completa
+        $configData = [
             'type' => 'config',
             'mapWidth' => $this->mapWidth,
-            'mapHeight' => $this->mapHeight
-        ]));
+            'mapHeight' => $this->mapHeight,
+            'mapConfig' => $this->mapConfig
+        ];
+        $jsonConfig = json_encode($configData);
+        echo "Enviando config para cliente (tamanho: " . strlen($jsonConfig) . " bytes, mapConfig: " . ($this->mapConfig ? 'SIM' : 'NULL') . ")\n";
+        $conn->send($jsonConfig);
     }
 
     public function onMessage(ConnectionInterface $from, $msg): void
@@ -167,9 +326,8 @@ class GameEngine implements MessageComponentInterface
         $name = $data['name'] ?? 'Bruxo';
         $wand = $data['wand'] ?? 'phoenix';
 
-        // Posição aleatória no mapa
-        $x = mt_rand(100, (int)$this->mapWidth - 100);
-        $y = mt_rand(100, (int)$this->mapHeight - 100);
+        // Posição aleatória válida no mapa (evitando obstáculos)
+        [$x, $y] = $this->findValidSpawnPosition(100, $this->mapWidth - 100, 100, $this->mapHeight - 100, 28);
 
         $wizard = new Wizard($conn, $name, $x, $y, $wand);
         $this->wizards[$wizard->id] = $wizard;
@@ -706,7 +864,14 @@ class GameEngine implements MessageComponentInterface
         // Atualiza bruxos
         $burnDeaths = [];
         foreach ($this->wizards as $wizardId => $wizard) {
+            // Guarda posição anterior para resolver colisão
+            $oldX = $wizard->x;
+            $oldY = $wizard->y;
+
             $wizard->update($this->mapWidth, $this->mapHeight);
+
+            // Verifica colisão com obstáculos do mapa
+            $this->resolveObstacleCollision($wizard->x, $wizard->y, $wizard->size, $oldX, $oldY);
 
             // Verifica morte por burn
             if ($wizard->checkBurnDeath()) {
@@ -735,9 +900,8 @@ class GameEngine implements MessageComponentInterface
                 $this->bots[$killerId]['score'] += (int)($victim->score / 2);
             }
 
-            // Respawna a vítima
-            $newX = mt_rand(100, (int)$this->mapWidth - 100);
-            $newY = mt_rand(100, (int)$this->mapHeight - 100);
+            // Respawna a vítima em posição válida
+            [$newX, $newY] = $this->findValidSpawnPosition(100, $this->mapWidth - 100, 100, $this->mapHeight - 100, $victim->size);
             $victim->respawn($newX, $newY);
 
             // Nome do matador
@@ -770,6 +934,11 @@ class GameEngine implements MessageComponentInterface
         // Atualiza feitiços
         foreach ($this->spells as $id => $spell) {
             if (!$spell->update() || $spell->isOutOfBounds($this->mapWidth, $this->mapHeight)) {
+                unset($this->spells[$id]);
+                continue;
+            }
+            // Verifica colisão com obstáculos do mapa
+            if ($this->checkObstacleCollision($spell->x, $spell->y, $spell->size) !== null) {
                 unset($this->spells[$id]);
             }
         }
@@ -876,8 +1045,9 @@ class GameEngine implements MessageComponentInterface
             $type = 'snitch';
         }
 
-        $x = mt_rand(50, (int)$this->mapWidth - 50);
-        $y = mt_rand(50, (int)$this->mapHeight - 50);
+        // Spawn em posição válida (evitando obstáculos)
+        $size = $type === 'snitch' ? 32 : ($type === 'fairy' ? 24 : 18);
+        [$x, $y] = $this->findValidSpawnPosition(50, $this->mapWidth - 50, 50, $this->mapHeight - 50, $size);
 
         $creature = new Creature($type, $x, $y);
         $this->creatures[$creature->id] = $creature;
@@ -892,8 +1062,8 @@ class GameEngine implements MessageComponentInterface
         $wands = ['phoenix', 'dragon', 'unicorn', 'elder'];
         $wand = $wands[array_rand($wands)];
 
-        $x = mt_rand(200, (int)$this->mapWidth - 200);
-        $y = mt_rand(200, (int)$this->mapHeight - 200);
+        // Spawn em posição válida (evitando obstáculos)
+        [$x, $y] = $this->findValidSpawnPosition(200, $this->mapWidth - 200, 200, $this->mapHeight - 200, 28);
 
         $botId = 'bot_' . $botCounter;
 
@@ -1048,6 +1218,10 @@ class GameEngine implements MessageComponentInterface
                 $this->botShootCreatures($bot);
             }
 
+            // Guarda posição anterior para colisão
+            $oldX = $bot['x'];
+            $oldY = $bot['y'];
+
             // Aplica velocidade
             $bot['x'] += $bot['velX'];
             $bot['y'] += $bot['velY'];
@@ -1059,6 +1233,9 @@ class GameEngine implements MessageComponentInterface
             // Limita ao mapa
             $bot['x'] = max($bot['size'], min($this->mapWidth - $bot['size'], $bot['x']));
             $bot['y'] = max($bot['size'], min($this->mapHeight - $bot['size'], $bot['y']));
+
+            // Verifica colisão com obstáculos do mapa
+            $this->resolveObstacleCollision($bot['x'], $bot['y'], $bot['size'], $oldX, $oldY);
         }
 
         // Processa mortes por burn
@@ -1492,9 +1669,8 @@ class GameEngine implements MessageComponentInterface
                 $this->bots[$killerId]['score'] += (int)($victim->score / 2);
             }
 
-            // Respawna a vítima
-            $newX = mt_rand(100, (int)$this->mapWidth - 100);
-            $newY = mt_rand(100, (int)$this->mapHeight - 100);
+            // Respawna a vítima em posição válida
+            [$newX, $newY] = $this->findValidSpawnPosition(100, $this->mapWidth - 100, 100, $this->mapHeight - 100, $victim->size);
             $victim->respawn($newX, $newY);
 
             // Nome do matador
