@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nimbus.io - Batalha de Bruxos</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Spectral:wght@400;500;600&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -532,7 +532,12 @@
             </div>
 
             <div class="spellbook-content" id="spellbookContent">
-                <!-- Content loaded dynamically -->
+                <!-- Combos Basicos (3 teclas) -->
+                <div class="combo-category" id="basicCombos"></div>
+                <!-- Combos Intermediarios (4 teclas) -->
+                <div class="combo-category hidden" id="intermediateCombos"></div>
+                <!-- Combos Avancados (5 teclas) -->
+                <div class="combo-category hidden" id="advancedCombos"></div>
             </div>
 
             <div class="spellbook-footer">
@@ -570,11 +575,13 @@
     </div>
 
     <!-- Scripts - Nova estrutura modular -->
-    <script src="js/network/Network.js"></script>
-    <script src="js/network/Input.js"></script>
-    <script src="js/entities/Player.js"></script>
-    <script src="js/entities/Spell.js"></script>
-    <script src="js/core/Renderer.js"></script>
-    <script src="js/core/Game.js"></script>
+    <script src="js/config/MapConfig.js?v=2"></script>
+    <script src="js/network/Network.js?v=2"></script>
+    <script src="js/network/Input.js?v=2"></script>
+    <script src="js/entities/Player.js?v=2"></script>
+    <script src="js/entities/Spell.js?v=2"></script>
+    <script src="js/core/Renderer.js?v=2"></script>
+    <script src="js/core/MapRenderer.js?v=2"></script>
+    <script src="js/core/Game.js?v=2"></script>
 </body>
 </html>

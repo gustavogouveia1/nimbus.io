@@ -37,7 +37,7 @@ html, body {
 
 body {
     font-family: 'Spectral', 'Georgia', serif;
-    background: #1a0a2e;
+    background: #0a1a0a;
 }
 
 /* ==================== MENU DE ENTRADA - ESTILO DIEP.IO ==================== */
@@ -63,7 +63,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(26, 10, 46, 0.3);
+    background: rgba(10, 30, 10, 0.3);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     z-index: -1;
@@ -2359,7 +2359,8 @@ body {
     padding: 20px 30px;
 }
 
-.spell-category {
+.spell-category,
+.combo-category {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -2566,7 +2567,8 @@ body {
 .effect-tag.shield { background: rgba(212, 175, 55, 0.3); color: #D4AF37; border: 1px solid #D4AF37; }
 .effect-tag.reflect { background: rgba(255, 235, 59, 0.3); color: #FFEB3B; border: 1px solid #FFEB3B; }
 .effect-tag.thorns { background: rgba(76, 175, 80, 0.3); color: #81C784; border: 1px solid #4CAF50; }
-.effect-tag.heal { background: rgba(76, 175, 80, 0.3); color: #A5D6A7; border: 1px solid #66BB6A; }
+.effect-tag.heal,
+.effect-tag.heal-self { background: rgba(76, 175, 80, 0.3); color: #A5D6A7; border: 1px solid #66BB6A; }
 .effect-tag.all-elements { background: linear-gradient(90deg, rgba(255,0,0,0.2), rgba(0,255,0,0.2), rgba(0,0,255,0.2)); color: white; border: 1px solid rgba(255,255,255,0.5); }
 .effect-tag.delayed-explosion { background: rgba(230, 126, 34, 0.3); color: #E67E22; border: 1px solid #E67E22; }
 .effect-tag.pull { background: rgba(26, 188, 156, 0.3); color: #1ABC9C; border: 1px solid #1ABC9C; }
