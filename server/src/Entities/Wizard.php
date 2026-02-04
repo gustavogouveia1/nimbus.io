@@ -17,8 +17,8 @@ class Wizard
     public float $velX = 0;
     public float $velY = 0;
     public float $angle = 0;
-    public int $hp;
-    public int $maxHp = 100;
+    public float $hp;
+    public float $maxHp = 100;
     public float $mana;
     public float $maxMana = 100;
     public int $xp = 0;

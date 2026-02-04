@@ -14,16 +14,16 @@ use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
 use React\EventLoop\Loop;
 use React\Socket\SocketServer;
-use NimbusIO\GameServer;
+use NimbusIO\Core\GameEngine;
 
-$host = '26.12.134.180';
-$port = 8080;
+$host = getenv('SERVER_HOST') ?: '0.0.0.0';
+$port = (int)(getenv('SERVER_PORT') ?: 8080);
 
 // Obtém o loop global do React
 $loop = Loop::get();
 
-// Cria o GameServer passando o loop
-$gameServer = new GameServer($loop);
+// Cria o GameEngine passando o loop
+$gameServer = new GameEngine($loop);
 
 // Cria o servidor WebSocket usando o mesmo loop
 $socket = new SocketServer("{$host}:{$port}", [], $loop);
