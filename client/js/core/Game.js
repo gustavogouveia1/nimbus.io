@@ -46,7 +46,9 @@ const Game = {
         vy: 0,
         angle: 0,
         targetAngle: 0,
-        angularVelocity: 0
+        angularVelocity: 0,
+        armAngle: 0,         // Ângulo atual do braço (interpolado)
+        targetArmAngle: 0    // Ângulo alvo do braço
     },
     baseSpeed: 5,
 
@@ -239,62 +241,66 @@ const Game = {
         }
     },
 
-    // Designs de skins de vassouras
-    broomSkins: {
+    // Designs de skins de varinhas (para loja)
+    wandSkins: {
         default: {
-            handle: ['#5D3A1A', '#8B4513', '#A0522D', '#CD853F'],
-            metal: '#D4AF37',
-            metalShine: '#FFD700',
-            bristles: ['#DEB887', '#D2B48C', '#C4A574', '#DAA520'],
-            binding: '#8B4513',
+            wood: '#654321',
+            woodLight: '#8B7355',
+            woodDark: '#3E2723',
+            core: '#FFD700',
+            coreGlow: '#FFF8DC',
+            handle: '#4A3728',
             special: null
         },
-        broom_nimbus: {
-            handle: ['#c0c0c0', '#dfe6e9', '#ecf0f1', '#ffffff'],
-            metal: '#bdc3c7',
-            metalShine: '#ecf0f1',
-            bristles: ['#f5f5f5', '#e0e0e0', '#bdbdbd', '#9e9e9e'],
-            binding: '#95a5a6',
-            special: 'speedLines',
-            aura: { color: '#dfe6e9', alpha: 0.3 }
+        wand_elder: {
+            wood: '#2C2416',
+            woodLight: '#4A3C2A',
+            woodDark: '#1A1510',
+            core: '#E8E8E8',
+            coreGlow: '#FFFFFF',
+            handle: '#1E1A14',
+            special: 'deathlyGlow',
+            aura: { color: '#E8E8E8', alpha: 0.4 }
         },
-        broom_firebolt: {
-            handle: ['#8b0000', '#b22222', '#cd5c5c', '#e74c3c'],
-            metal: '#f39c12',
-            metalShine: '#ffd700',
-            bristles: ['#ff6b35', '#ff4500', '#ff6347', '#dc143c'],
-            binding: '#8b0000',
-            special: 'flames',
-            aura: { color: '#e74c3c', alpha: 0.25 }
+        wand_phoenix: {
+            wood: '#8B0000',
+            woodLight: '#CD5C5C',
+            woodDark: '#5C0000',
+            core: '#FF6B35',
+            coreGlow: '#FFD700',
+            handle: '#6B0000',
+            special: 'phoenixFeather',
+            aura: { color: '#FF6B35', alpha: 0.3 }
         },
-        broom_lightning: {
-            handle: ['#f1c40f', '#f39c12', '#e67e22', '#d35400'],
-            metal: '#fff9c4',
-            metalShine: '#ffffff',
-            bristles: ['#fff59d', '#ffee58', '#fdd835', '#f9a825'],
-            binding: '#f39c12',
-            special: 'electricSparks',
-            aura: { color: '#f1c40f', alpha: 0.3 }
+        wand_dragon: {
+            wood: '#006266',
+            woodLight: '#00B894',
+            woodDark: '#003D3D',
+            core: '#55EFC4',
+            coreGlow: '#81ECEC',
+            handle: '#004D4D',
+            special: 'dragonHeartstring',
+            aura: { color: '#00B894', alpha: 0.25 }
         },
-        broom_phoenix: {
-            handle: ['#c0392b', '#e74c3c', '#ff6b6b', '#ff8e8e'],
-            metal: '#ffd700',
-            metalShine: '#fff5cc',
-            bristles: ['#ff6b6b', '#fd79a8', '#fab1a0', '#ffeaa7'],
-            binding: '#d63031',
-            special: 'phoenixFeathers',
-            aura: { color: '#fd79a8', alpha: 0.3 },
-            hasFeathers: true
+        wand_unicorn: {
+            wood: '#DEB887',
+            woodLight: '#F5DEB3',
+            woodDark: '#A0785A',
+            core: '#E8E8E8',
+            coreGlow: '#FFFFFF',
+            handle: '#C4A574',
+            special: 'unicornHair',
+            aura: { color: '#FFFFFF', alpha: 0.35 }
         },
-        broom_dragon: {
-            handle: ['#006266', '#009432', '#00b894', '#55efc4'],
-            metal: '#2d3436',
-            metalShine: '#636e72',
-            bristles: ['#00b894', '#1abc9c', '#55efc4', '#81ecec'],
-            binding: '#006266',
-            special: 'dragonScales',
-            aura: { color: '#00b894', alpha: 0.25 },
-            hasScales: true
+        wand_thestral: {
+            wood: '#1A1A2E',
+            woodLight: '#2D2D44',
+            woodDark: '#0D0D17',
+            core: '#8B00FF',
+            coreGlow: '#DA70D6',
+            handle: '#16162A',
+            special: 'thestralCore',
+            aura: { color: '#8B00FF', alpha: 0.3 }
         }
     },
 
@@ -510,6 +516,10 @@ const Game = {
         `;
     },
 
+    // Flag para usar Pixi.js
+    usePixiRenderer: false,
+    pixiTime: 0,
+
     loadMapConfig() {
         console.log('[Game] loadMapConfig() chamado');
         console.log('[Game] MAP_CONFIG existe?', typeof MAP_CONFIG !== 'undefined');
@@ -523,10 +533,13 @@ const Game = {
 
             console.log('Map config carregado:', this.mapConfig.theme);
 
-            // Inicializa o MapRenderer
-            if (typeof MapRenderer !== 'undefined') {
+            // Tenta inicializar Pixi.js para gráficos avançados
+            this.initPixiRenderer();
+
+            // Fallback para MapRenderer Canvas 2D se Pixi.js falhar
+            if (!this.usePixiRenderer && typeof MapRenderer !== 'undefined') {
                 MapRenderer.init(this.canvas, this.ctx, this.mapConfig);
-                console.log('MapRenderer inicializado com sucesso!');
+                console.log('MapRenderer (Canvas 2D) inicializado como fallback');
             }
         } else {
             console.warn('MAP_CONFIG não encontrado, usando valores padrão');
@@ -535,9 +548,141 @@ const Game = {
         }
     },
 
+    // Inicializa o sistema de renderização Pixi.js
+    async initPixiRenderer() {
+        // Verifica se Pixi.js está disponível
+        if (typeof PIXI === 'undefined') {
+            console.warn('[Pixi] PIXI não disponível, usando Canvas 2D');
+            return;
+        }
+
+        // Verifica se os módulos Pixi estão disponíveis
+        if (typeof PixiApp === 'undefined') {
+            console.warn('[Pixi] Módulos Pixi não carregados, usando Canvas 2D');
+            return;
+        }
+
+        try {
+            console.log('[Pixi] Inicializando sistema de renderização WebGL...');
+
+            // Inicializa aplicação Pixi.js
+            const success = await PixiApp.init(this.canvas);
+            if (!success) {
+                console.warn('[Pixi] Falha ao inicializar PixiApp');
+                return;
+            }
+
+            // Inicializa câmera
+            PixiCamera.init(PixiApp.stage, this.canvas.width, this.canvas.height);
+            PixiCamera.setBounds(0, 0, this.mapWidth, this.mapHeight);
+
+            // Inicializa renderizadores
+            await TerrainRenderer.init(
+                PixiApp.getLayer('terrain'),
+                PixiApp.getLayer('lanes'),
+                this.mapConfig
+            );
+
+            await WaterRenderer.init(
+                PixiApp.getLayer('water'),
+                this.mapConfig
+            );
+
+            await VegetationRenderer.init(
+                PixiApp.getLayer('shadows'),
+                PixiApp.getLayer('obstacles'),
+                this.mapConfig
+            );
+
+            await ObstacleRenderer.init(
+                PixiApp.getLayer('obstacles'),
+                PixiApp.getLayer('shadows'),
+                this.mapConfig
+            );
+
+            await DecorationRenderer.init(
+                PixiApp.getLayer('decorations'),
+                this.mapConfig
+            );
+
+            await ParticleSystem.init(
+                PixiApp.getLayer('effects'),
+                this.mapConfig
+            );
+
+            await LightingSystem.init(
+                PixiApp.getLayer('lighting'),
+                this.mapConfig
+            );
+
+            this.usePixiRenderer = true;
+            console.log('[Pixi] Sistema de renderização WebGL inicializado com sucesso!');
+            console.log('[Pixi] Stats:', PixiApp.getStats());
+
+        } catch (error) {
+            console.error('[Pixi] Erro ao inicializar:', error);
+            this.usePixiRenderer = false;
+        }
+    },
+
+    // Atualiza o sistema Pixi.js
+    updatePixiRenderer(deltaTime) {
+        if (!this.usePixiRenderer) return;
+
+        this.pixiTime += deltaTime * 0.016;
+
+        // Atualiza câmera para seguir o jogador local
+        if (this.localPlayer) {
+            PixiCamera.setTarget(this.localPlayer.x, this.localPlayer.y);
+            PixiCamera.update(deltaTime);
+        }
+
+        // Atualiza terreno (chunks visíveis)
+        const bounds = PixiCamera.getVisibleBounds(100);
+        TerrainRenderer.update(
+            PixiCamera.x,
+            PixiCamera.y,
+            PixiCamera.viewport.width,
+            PixiCamera.viewport.height
+        );
+
+        // Atualiza água (animação)
+        WaterRenderer.update(deltaTime);
+
+        // Atualiza vegetação (animação de balanço)
+        VegetationRenderer.update(deltaTime, this.pixiTime);
+
+        // Atualiza decorações (flores brilhantes)
+        DecorationRenderer.update(deltaTime, this.pixiTime);
+
+        // Atualiza partículas
+        ParticleSystem.update(
+            deltaTime,
+            PixiCamera.x,
+            PixiCamera.y,
+            PixiCamera.viewport.width,
+            PixiCamera.viewport.height
+        );
+
+        // Atualiza iluminação
+        LightingSystem.update(deltaTime);
+    },
+
+    // Adiciona shake à câmera Pixi
+    addPixiShake(intensity) {
+        if (this.usePixiRenderer && typeof PixiCamera !== 'undefined') {
+            PixiCamera.addShake(intensity);
+        }
+    },
+
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+
+        // Atualiza viewport da câmera Pixi se ativo
+        if (this.usePixiRenderer && typeof PixiCamera !== 'undefined') {
+            PixiCamera.updateViewport(window.innerWidth, window.innerHeight);
+        }
     },
 
     initAmbientParticles() {
@@ -762,7 +907,7 @@ const Game = {
 
                     this.localPlayer.targetX = p.x;
                     this.localPlayer.targetY = p.y;
-                    this.baseSpeed = 5 + (p.stats?.broomSpeed || 0) * 0.5;
+                    this.baseSpeed = 5 + (p.stats?.movementSpeed || 0) * 0.5;
                 } else {
                     if (!this.playerInterpolation[p.id]) {
                         this.playerInterpolation[p.id] = {
@@ -876,8 +1021,8 @@ const Game = {
                         this.myPlayer.cosmetics.aura = msg.itemId;
                     } else if (msg.itemType === 'wizard') {
                         this.myPlayer.wizardSkin = msg.itemId;
-                    } else if (msg.itemType === 'broom') {
-                        this.myPlayer.broomSkin = msg.itemId;
+                    } else if (msg.itemType === 'wand') {
+                        this.myPlayer.wandSkin = msg.itemId;
                     }
                 }
                 this.elements.goldValue.textContent = msg.newGold;
@@ -1001,7 +1146,7 @@ const Game = {
 
                 const tabName = tab.dataset.tab;
                 document.getElementById('wizardsSection').classList.toggle('hidden', tabName !== 'wizards');
-                document.getElementById('broomsSection').classList.toggle('hidden', tabName !== 'brooms');
+                document.getElementById('wandsSection').classList.toggle('hidden', tabName !== 'wands');
                 document.getElementById('cosmeticsSection').classList.toggle('hidden', tabName !== 'cosmetics');
             });
         });
@@ -1248,6 +1393,33 @@ const Game = {
         this.localPlayer.angle += angleDiff * angleInterpSpeed;
         this.localPlayer.angularVelocity = this.localPlayer.angle - prevAngle;
 
+        // Interpolação suave do ângulo do braço (mais rápida e responsiva)
+        // Calcula o ângulo alvo do braço baseado na direção do mouse
+        let normalizedAngle = this.localPlayer.angle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= Math.PI * 2;
+        while (normalizedAngle < -Math.PI) normalizedAngle += Math.PI * 2;
+        const facingLeft = Math.abs(normalizedAngle) > Math.PI / 2;
+
+        let targetArmAngle;
+        if (facingLeft) {
+            targetArmAngle = Math.PI - normalizedAngle;
+            if (targetArmAngle > Math.PI) targetArmAngle -= Math.PI * 2;
+            if (targetArmAngle < -Math.PI) targetArmAngle += Math.PI * 2;
+        } else {
+            targetArmAngle = normalizedAngle;
+        }
+        // Limitar o ângulo do braço
+        const maxArmAngle = Math.PI * 0.45;
+        targetArmAngle = Math.max(-maxArmAngle, Math.min(maxArmAngle, targetArmAngle));
+        this.localPlayer.targetArmAngle = targetArmAngle;
+
+        // Interpolação suave do braço (mais rápida que o corpo para ser responsivo)
+        let armAngleDiff = this.localPlayer.targetArmAngle - this.localPlayer.armAngle;
+        while (armAngleDiff > Math.PI) armAngleDiff -= Math.PI * 2;
+        while (armAngleDiff < -Math.PI) armAngleDiff += Math.PI * 2;
+        const armInterpSpeed = 0.25 * this.deltaTime;
+        this.localPlayer.armAngle += armAngleDiff * armInterpSpeed;
+
         const margin = this.myPlayer.size || 25;
         this.localPlayer.x = Math.max(margin, Math.min(this.mapWidth - margin, this.localPlayer.x));
         this.localPlayer.y = Math.max(margin, Math.min(this.mapHeight - margin, this.localPlayer.y));
@@ -1299,6 +1471,8 @@ const Game = {
 
     triggerScreenShake(intensity) {
         this.camera.shake = Math.min(this.camera.shake + intensity, 35);
+        // Também aplica ao sistema Pixi se ativo
+        this.addPixiShake(intensity);
     },
 
     updateParticles() {
@@ -1589,8 +1763,16 @@ const Game = {
     render() {
         const ctx = this.ctx;
 
-        // Renderiza o mapa da Floresta Proibida
-        if (this.mapConfig && typeof MapRenderer !== 'undefined') {
+        // Usa Pixi.js se disponível (WebGL)
+        if (this.usePixiRenderer) {
+            // Atualiza sistema Pixi.js (terreno, água, partículas, etc)
+            this.updatePixiRenderer(this.deltaTime);
+
+            // O Pixi.js renderiza automaticamente via seu próprio ticker
+            // Continua para renderizar entidades sobre o mapa Pixi
+        }
+        // Fallback: Canvas 2D com MapRenderer
+        else if (this.mapConfig && typeof MapRenderer !== 'undefined') {
             MapRenderer.update(this.deltaTime * 0.016);
             MapRenderer.render(this.camera.x, this.camera.y);
         } else {
@@ -1621,7 +1803,7 @@ const Game = {
         // Magias
         this.spells.forEach(spell => this.drawSpell(spell));
 
-        // Jogadores (bruxos em vassouras - PIXEL ART)
+        // Jogadores (bruxos flutuantes - PIXEL ART)
         Object.values(this.players).forEach(player => this.drawPixelWizard(player));
 
         // Partículas de efeito
@@ -2354,10 +2536,43 @@ const Game = {
         const scale = (player.size || 28) / 28;
         const pixelSize = 3 * scale;
 
+        // ====== DETERMINAR DIREÇÃO DO MAGO ======
+        // Normaliza o ângulo para estar entre -π e π
+        let normalizedAngle = playerAngle;
+        while (normalizedAngle > Math.PI) normalizedAngle -= Math.PI * 2;
+        while (normalizedAngle < -Math.PI) normalizedAngle += Math.PI * 2;
+
+        // Flip horizontal baseado na direção do mouse
+        const facingLeft = Math.abs(normalizedAngle) > Math.PI / 2;
+        const flipX = facingLeft ? -1 : 1;
+
+        // Usar ângulo do braço interpolado para o jogador local (mais suave)
+        // Para outros jogadores, calcular na hora
+        let armAngle;
+        if (isMe && this.localPlayer.armAngle !== undefined) {
+            // Usar o valor pré-interpolado para suavidade
+            armAngle = this.localPlayer.armAngle;
+        } else {
+            // Calcular ângulo do braço para outros jogadores
+            if (facingLeft) {
+                armAngle = Math.PI - normalizedAngle;
+                if (armAngle > Math.PI) armAngle -= Math.PI * 2;
+                if (armAngle < -Math.PI) armAngle += Math.PI * 2;
+            } else {
+                armAngle = normalizedAngle;
+            }
+            // Limitar o ângulo do braço
+            const maxArmAngle = Math.PI * 0.45;
+            armAngle = Math.max(-maxArmAngle, Math.min(maxArmAngle, armAngle));
+        }
+
         // ====== RASTRO DE VENTO / PARTÍCULAS ======
         if (isMoving) {
             const trailIntensity = Math.min(speed / 3, 1);
             const trailCount = Math.floor(3 + trailIntensity * 4);
+
+            // Direção do movimento (não da mira)
+            const moveAngle = Math.atan2(playerVy, playerVx);
 
             for (let i = 0; i < trailCount; i++) {
                 const trailAge = (time * 8 + i * 1.3) % 1;
@@ -2365,9 +2580,9 @@ const Game = {
                 const spreadX = (Math.sin(time * 12 + i * 2.5) * 8 + (Math.random() - 0.5) * 6) * scale;
                 const spreadY = (Math.cos(time * 10 + i * 1.8) * 8 + (Math.random() - 0.5) * 6) * scale;
 
-                // Posição atrás da vassoura
-                const trailX = x - Math.cos(playerAngle) * trailDist + spreadX;
-                const trailY = y - Math.sin(playerAngle) * trailDist + spreadY;
+                // Posição atrás do bruxo (baseado na direção do movimento, não da mira)
+                const trailX = x - Math.cos(moveAngle) * trailDist + spreadX;
+                const trailY = y - Math.sin(moveAngle) * trailDist + spreadY;
 
                 const alpha = (1 - trailAge) * 0.4 * trailIntensity;
                 const size = (3 - trailAge * 2) * scale;
@@ -2378,7 +2593,7 @@ const Game = {
                 ctx.fill();
             }
 
-            // Linhas de velocidade quando muito rápido
+            // Linhas de velocidade quando muito rápido (baseado no movimento)
             if (speed > 2) {
                 ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min((speed - 2) * 0.15, 0.3)})`;
                 ctx.lineWidth = 1.5;
@@ -2387,17 +2602,17 @@ const Game = {
                     const lineStart = 25 * scale;
                     const lineLen = 15 + speed * 5;
 
-                    const perpX = -Math.sin(playerAngle) * lineOffset;
-                    const perpY = Math.cos(playerAngle) * lineOffset;
+                    const perpX = -Math.sin(moveAngle) * lineOffset;
+                    const perpY = Math.cos(moveAngle) * lineOffset;
 
                     ctx.beginPath();
                     ctx.moveTo(
-                        x - Math.cos(playerAngle) * lineStart + perpX,
-                        y - Math.sin(playerAngle) * lineStart + perpY
+                        x - Math.cos(moveAngle) * lineStart + perpX,
+                        y - Math.sin(moveAngle) * lineStart + perpY
                     );
                     ctx.lineTo(
-                        x - Math.cos(playerAngle) * (lineStart + lineLen) + perpX,
-                        y - Math.sin(playerAngle) * (lineStart + lineLen) + perpY
+                        x - Math.cos(moveAngle) * (lineStart + lineLen) + perpX,
+                        y - Math.sin(moveAngle) * (lineStart + lineLen) + perpY
                     );
                     ctx.stroke();
                 }
@@ -2436,186 +2651,60 @@ const Game = {
             this.drawBurnEffect(ctx, player.size);
         }
 
-        // ====== ROTAÇÃO COMPLETA DO JOGADOR (BONECO + VASSOURA) ======
-        // Detecta se está mirando para a esquerda (ângulo entre π/2 e 3π/2)
-        // Normaliza o ângulo para estar entre -π e π
-        let normalizedAngle = playerAngle;
-        while (normalizedAngle > Math.PI) normalizedAngle -= Math.PI * 2;
-        while (normalizedAngle < -Math.PI) normalizedAngle += Math.PI * 2;
+        // ====== FLIP HORIZONTAL E INCLINAÇÃO SUAVE ======
+        // Flip horizontal baseado na direção do mouse (já calculado acima)
+        ctx.scale(flipX, 1);
 
-        const facingLeft = Math.abs(normalizedAngle) > Math.PI / 2;
+        // Inclinação suave baseada no movimento (não na mira)
+        // O corpo inclina levemente na direção do movimento
+        const moveAngle = Math.atan2(playerVy, playerVx);
+        const bodyLean = isMoving ? Math.sin(moveAngle) * 0.12 * flipX : 0;
 
-        // Se estiver mirando para a esquerda, flipa o sprite verticalmente
-        // e ajusta o ângulo para manter a direção correta
-        if (facingLeft) {
-            ctx.scale(1, -1);
-            ctx.rotate(-playerAngle);
-        } else {
-            ctx.rotate(playerAngle);
-        }
+        // Breathing animation - expansão/contração sutil do peito
+        const breathingPhase = Math.sin(time * 1.5) * 0.02;
 
-        // Depois aplica o banking (inclinação lateral durante curvas)
-        // Banking se aplica a TODO o jogador (vassoura + bruxo) para visual profissional
-        const bankingDirection = facingLeft ? -1 : 1;
-        ctx.rotate(totalBanking * bankingDirection);
+        // Aplicar inclinação suave ao corpo (não rotação completa)
+        ctx.rotate(bodyLean + breathingPhase);
 
-        // ====== PIXEL ART WIZARD ======
+        // ====== PIXEL ART WIZARD (FLUTUANTE) ======
 
-        // Sombra
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        // Sombra flutuante no chão (mais suave e difusa)
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.beginPath();
-        ctx.ellipse(3, 20 * scale, 20 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        const shadowPulse = 1 + Math.sin(this.time * 3) * 0.1;
+        ctx.ellipse(0, 25 * scale, 18 * scale * shadowPulse, 6 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // ====== VASSOURA COM SKIN ======
-        const broomSkin = this.broomSkins[player.broomSkin] || this.broomSkins.default;
-
-        // Aura da vassoura (se tiver)
-        if (broomSkin.aura) {
-            const auraGlow = ctx.createRadialGradient(0, 0, 5, 0, 0, 50 * scale);
-            auraGlow.addColorStop(0, `rgba(${this.hexToRgb(broomSkin.aura.color)}, ${broomSkin.aura.alpha})`);
-            auraGlow.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = auraGlow;
-            ctx.fillRect(-60 * scale, -20 * scale, 100 * scale, 40 * scale);
-        }
-
-        // Cabo principal da vassoura
-        const broomGradient = ctx.createLinearGradient(-45 * scale, 0, 35 * scale, 0);
-        broomGradient.addColorStop(0, broomSkin.handle[0]);
-        broomGradient.addColorStop(0.3, broomSkin.handle[1]);
-        broomGradient.addColorStop(0.7, broomSkin.handle[2]);
-        broomGradient.addColorStop(1, broomSkin.handle[3]);
-
-        ctx.fillStyle = broomGradient;
+        // ====== EFEITO DE LEVITAÇÃO MÁGICA ======
+        // Aura mágica de levitação sob o mago
+        const levitationGlow = ctx.createRadialGradient(0, 18 * scale, 0, 0, 18 * scale, 25 * scale);
+        levitationGlow.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+        levitationGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.15)');
+        levitationGlow.addColorStop(1, 'rgba(212, 175, 55, 0)');
+        ctx.fillStyle = levitationGlow;
         ctx.beginPath();
-        ctx.moveTo(-45 * scale, -3 * scale);
-        ctx.lineTo(35 * scale, -2 * scale);
-        ctx.lineTo(35 * scale, 3 * scale);
-        ctx.lineTo(-45 * scale, 4 * scale);
-        ctx.closePath();
+        ctx.ellipse(0, 18 * scale, 20 * scale, 12 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Escamas de dragão no cabo (Dragon Rider)
-        if (broomSkin.hasScales) {
-            ctx.fillStyle = this.darkenColor(broomSkin.handle[2], 20);
-            for (let i = 0; i < 8; i++) {
-                const sx = -35 * scale + i * 8 * scale;
-                ctx.beginPath();
-                ctx.arc(sx, 0, 3 * scale, 0, Math.PI, true);
-                ctx.fill();
-            }
-        }
-
-        // Brilho no cabo
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(-40 * scale, -2 * scale, 70 * scale, 2 * scale);
-
-        // Anel de metal
-        ctx.fillStyle = broomSkin.metal;
-        ctx.fillRect(-5 * scale, -4 * scale, 6 * scale, 9 * scale);
-        ctx.fillStyle = broomSkin.metalShine;
-        ctx.fillRect(-4 * scale, -3 * scale, 2 * scale, 7 * scale);
-
-        // Cerdas/Cauda da vassoura
-        const bristleBaseX = -45 * scale;
-
-        // Amarração das cerdas
-        ctx.fillStyle = broomSkin.binding;
-        ctx.fillRect(bristleBaseX - 3 * scale, -6 * scale, 5 * scale, 13 * scale);
-        ctx.fillStyle = this.darkenColor(broomSkin.binding, 20);
-        ctx.fillRect(bristleBaseX - 2 * scale, -5 * scale, 3 * scale, 11 * scale);
-
-        // Penas da Phoenix
-        if (broomSkin.hasFeathers) {
-            const featherColors = ['#ff6b6b', '#fd79a8', '#ffeaa7', '#ff9f43'];
-            for (let i = 0; i < 6; i++) {
-                const featherY = -8 * scale + i * 3 * scale;
-                const featherLen = 25 + Math.sin(i + this.time * 2) * 5;
-                ctx.fillStyle = featherColors[i % featherColors.length];
-                ctx.beginPath();
-                ctx.moveTo(bristleBaseX - 2 * scale, featherY);
-                ctx.quadraticCurveTo(
-                    bristleBaseX - featherLen * 0.6 * scale, featherY + (i - 2.5) * scale,
-                    bristleBaseX - featherLen * scale, featherY + (i - 2.5) * 1.5 * scale
-                );
-                ctx.quadraticCurveTo(
-                    bristleBaseX - featherLen * 0.6 * scale, featherY + 2 * scale + (i - 2.5) * scale,
-                    bristleBaseX - 2 * scale, featherY + 3 * scale
-                );
-                ctx.fill();
-            }
-        } else {
-            // Cerdas normais
-            for (let layer = 0; layer < 3; layer++) {
-                for (let i = 0; i < 8; i++) {
-                    const bristleY = -7 * scale + i * 2 * scale;
-                    const bristleLen = 18 + Math.sin(i + this.time * 3) * 3 + layer * 2;
-                    const colorIdx = (i + layer) % broomSkin.bristles.length;
-
-                    ctx.fillStyle = broomSkin.bristles[colorIdx];
-                    ctx.beginPath();
-                    ctx.moveTo(bristleBaseX - 2 * scale, bristleY);
-                    ctx.lineTo(bristleBaseX - bristleLen * scale, bristleY + (i - 3.5) * 0.8 * scale);
-                    ctx.lineTo(bristleBaseX - bristleLen * scale, bristleY + 2 * scale + (i - 3.5) * 0.8 * scale);
-                    ctx.lineTo(bristleBaseX - 2 * scale, bristleY + 2 * scale);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            }
-        }
-
-        // Efeitos especiais da vassoura
-        if (broomSkin.special === 'flames') {
-            for (let i = 0; i < 5; i++) {
-                const flameX = bristleBaseX - 15 * scale - Math.random() * 10 * scale;
-                const flameY = -4 * scale + i * 2 * scale;
-                const flameSize = 4 + Math.sin(this.time * 8 + i) * 2;
-                ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, ${0.6 + Math.random() * 0.4})`;
-                ctx.beginPath();
-                ctx.arc(flameX, flameY, flameSize * scale, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        } else if (broomSkin.special === 'electricSparks') {
-            ctx.strokeStyle = '#fff59d';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 3; i++) {
-                const sparkX = bristleBaseX - 10 * scale;
-                const sparkY = -5 * scale + i * 5 * scale;
-                ctx.beginPath();
-                ctx.moveTo(sparkX, sparkY);
-                ctx.lineTo(sparkX - 8 * scale, sparkY + (Math.random() - 0.5) * 10 * scale);
-                ctx.lineTo(sparkX - 15 * scale, sparkY + (Math.random() - 0.5) * 15 * scale);
-                ctx.stroke();
-            }
-        } else if (broomSkin.special === 'speedLines') {
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 4; i++) {
-                const lineY = -3 * scale + i * 2 * scale;
-                ctx.beginPath();
-                ctx.moveTo(40 * scale, lineY);
-                ctx.lineTo(55 * scale, lineY);
-                ctx.stroke();
-            }
-        }
-
-        // Cerdas soltas
-        ctx.strokeStyle = broomSkin.bristles[2];
-        ctx.lineWidth = 1.5 * scale;
+        // Partículas mágicas de levitação (brilhos sob o mago)
         for (let i = 0; i < 5; i++) {
-            const startY = -6 * scale + i * 3 * scale;
-            const wobble = Math.sin(this.time * 4 + i) * 2;
+            const particleAngle = (this.time * 2 + i * 1.25) % (Math.PI * 2);
+            const particleRadius = 12 + Math.sin(this.time * 3 + i) * 4;
+            const px = Math.cos(particleAngle) * particleRadius * scale;
+            const py = 15 * scale + Math.sin(particleAngle) * 4 * scale;
+            const particleSize = 2 + Math.sin(this.time * 5 + i) * 1;
+            const particleAlpha = 0.4 + Math.sin(this.time * 4 + i) * 0.3;
+
+            ctx.fillStyle = `rgba(255, 215, 0, ${particleAlpha})`;
             ctx.beginPath();
-            ctx.moveTo(bristleBaseX - 2 * scale, startY);
-            ctx.quadraticCurveTo(
-                bristleBaseX - 12 * scale, startY + wobble * scale,
-                bristleBaseX - 22 * scale, startY + (i - 2) * 2 * scale + wobble * scale
-            );
-            ctx.stroke();
+            ctx.arc(px, py, particleSize * scale, 0, Math.PI * 2);
+            ctx.fill();
         }
+
+        // Obter skin da varinha para efeitos especiais
+        const wandShopSkin = this.wandSkins[player.wandSkin] || this.wandSkins.default;
 
         // ====== CORPO DO BRUXO COM SKIN ======
-        // (Continua dentro da mesma rotação - bruxo gira junto com a vassoura)
         const wizSkin = this.wizardSkins[player.wizardSkin] || this.wizardSkins.default;
 
         // Cores do bruxo
@@ -2730,6 +2819,32 @@ const Game = {
         ctx.globalAlpha = 1;
         ctx.restore();
 
+        // ====== BRAÇO ESQUERDO (desenhado ANTES do corpo - fica atrás) ======
+        // Animação sutil para o braço livre
+        const armWave = Math.sin(this.time * 2) * 0.5;
+        const idleArmBob = Math.sin(this.time * 1.8) * 0.08;
+
+        ctx.save();
+        ctx.translate(-8 * scale, 0);
+        ctx.rotate(-0.3 + armWave * 0.1 + idleArmBob);
+
+        // Manga do braço esquerdo
+        ctx.fillStyle = robeDark;
+        ctx.beginPath();
+        ctx.moveTo(0, -2 * scale);
+        ctx.lineTo(-12 * scale, 4 * scale);
+        ctx.lineTo(-10 * scale, 8 * scale);
+        ctx.lineTo(2 * scale, 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mão esquerda
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.arc(-11 * scale, 6 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
         // Capa/Robe (corpo principal)
         ctx.fillStyle = robeColor;
         this.drawPixelRect(ctx, -8, -5, 16, 20, pixelSize);
@@ -2800,19 +2915,188 @@ const Game = {
         ctx.fillStyle = wizSkin.hatBand;
         this.drawPixelRect(ctx, -7, -18, 14, 2, pixelSize);
 
-        // Varinha (já está rotacionada com o jogador)
-        ctx.fillStyle = wizSkin.wand;
-        ctx.fillRect(15 * scale, -3, 20 * scale, 3);
-        // Ponta da varinha brilhando
-        ctx.fillStyle = wizSkin.wandTip;
-        ctx.shadowColor = wizSkin.wandTip;
-        ctx.shadowBlur = 10;
+        // ====== BRAÇO DIREITO ARTICULADO (desenhado POR CIMA do corpo - segue o mouse) ======
+        // Posição do ombro
+        const shoulderX = 6 * scale;
+        const shoulderY = -4 * scale;
+
+        ctx.save();
+        ctx.translate(shoulderX, shoulderY);
+
+        // Rotação suave do braço para apontar para o mouse
+        const smoothArmAngle = armAngle;
+        ctx.rotate(smoothArmAngle);
+
+        // ====== UPPER ARM (Parte superior do braço) ======
+        const upperArmLength = 10 * scale;
+
+        // Manga do braço
+        ctx.fillStyle = robeColor;
         ctx.beginPath();
-        ctx.arc(37 * scale, -1.5, 4, 0, Math.PI * 2);
+        ctx.moveTo(-2 * scale, -3 * scale);
+        ctx.lineTo(upperArmLength, -2 * scale);
+        ctx.lineTo(upperArmLength + 2 * scale, 2 * scale);
+        ctx.lineTo(-2 * scale, 3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Sombra na manga
+        ctx.fillStyle = robeDark;
+        ctx.beginPath();
+        ctx.moveTo(-2 * scale, 1 * scale);
+        ctx.lineTo(upperArmLength, 0);
+        ctx.lineTo(upperArmLength + 2 * scale, 2 * scale);
+        ctx.lineTo(-2 * scale, 3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // ====== FOREARM + HAND (Antebraço e mão) ======
+        ctx.translate(upperArmLength, 0);
+
+        // Antebraço (punho da manga)
+        ctx.fillStyle = robeDark;
+        ctx.beginPath();
+        ctx.moveTo(0, -2 * scale);
+        ctx.lineTo(8 * scale, -1.5 * scale);
+        ctx.lineTo(8 * scale, 1.5 * scale);
+        ctx.lineTo(0, 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mão segurando a varinha
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.arc(10 * scale, 0, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dedos
+        ctx.fillStyle = skinDark;
+        ctx.beginPath();
+        ctx.arc(12 * scale, -1.5 * scale, 1.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(12 * scale, 1.5 * scale, 1.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ====== VARINHA (dentro do contexto do braço rotacionado) ======
+        // Cores da varinha
+        const wandWood = wandShopSkin.wood || wizSkin.wand;
+        const wandWoodLight = wandShopSkin.woodLight || this.lightenColor(wizSkin.wand, 20);
+        const wandWoodDark = wandShopSkin.woodDark || this.darkenColor(wizSkin.wand, 20);
+        const wandCore = wandShopSkin.core || wizSkin.wandTip;
+        const wandCoreGlow = wandShopSkin.coreGlow || wizSkin.wandTip;
+        const wandHandle = wandShopSkin.handle || this.darkenColor(wizSkin.wand, 30);
+
+        // Aura da varinha (se tiver skin especial)
+        if (wandShopSkin.aura) {
+            const wandAuraGlow = ctx.createRadialGradient(35 * scale, 0, 0, 35 * scale, 0, 25 * scale);
+            wandAuraGlow.addColorStop(0, `rgba(${this.hexToRgb(wandShopSkin.aura.color)}, ${wandShopSkin.aura.alpha})`);
+            wandAuraGlow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = wandAuraGlow;
+            ctx.beginPath();
+            ctx.arc(35 * scale, 0, 25 * scale, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Cabo da varinha (grip)
+        ctx.fillStyle = wandHandle;
+        ctx.beginPath();
+        ctx.roundRect(14 * scale, -2.5 * scale, 6 * scale, 4 * scale, 1 * scale);
+        ctx.fill();
+
+        // Detalhes do cabo
+        ctx.strokeStyle = wandWoodDark;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 2; i++) {
+            ctx.beginPath();
+            ctx.moveTo((15 + i * 2) * scale, -2.5 * scale);
+            ctx.lineTo((15 + i * 2) * scale, 1.5 * scale);
+            ctx.stroke();
+        }
+
+        // Corpo principal da varinha
+        const wandGrad = ctx.createLinearGradient(20 * scale, -2 * scale, 20 * scale, 2 * scale);
+        wandGrad.addColorStop(0, wandWoodLight);
+        wandGrad.addColorStop(0.5, wandWood);
+        wandGrad.addColorStop(1, wandWoodDark);
+        ctx.fillStyle = wandGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(20 * scale, -2 * scale);
+        ctx.lineTo(38 * scale, -1.2 * scale);
+        ctx.lineTo(38 * scale, 1.2 * scale);
+        ctx.lineTo(20 * scale, 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brilho na varinha
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(22 * scale, -1.5 * scale);
+        ctx.lineTo(35 * scale, -0.8 * scale);
+        ctx.lineTo(35 * scale, -0.2 * scale);
+        ctx.lineTo(22 * scale, -0.5 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Efeitos especiais da varinha
+        if (wandShopSkin.special === 'deathlyGlow') {
+            ctx.shadowColor = '#E8E8E8';
+            ctx.shadowBlur = 15;
+            ctx.strokeStyle = 'rgba(232, 232, 232, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(20 * scale, 0);
+            ctx.lineTo(38 * scale, 0);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        } else if (wandShopSkin.special === 'phoenixFeather') {
+            ctx.fillStyle = 'rgba(255, 107, 53, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(30 * scale, 0, 3 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (wandShopSkin.special === 'dragonHeartstring') {
+            ctx.fillStyle = 'rgba(85, 239, 196, 0.4)';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc((25 + i * 4) * scale, 0, 1.5 * scale, 0, Math.PI, true);
+                ctx.fill();
+            }
+        } else if (wandShopSkin.special === 'unicornHair') {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(30 * scale, 0, 5 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (wandShopSkin.special === 'thestralCore') {
+            ctx.fillStyle = 'rgba(139, 0, 255, 0.3)';
+            for (let i = 0; i < 4; i++) {
+                const px = (25 + Math.sin(this.time * 3 + i) * 4) * scale;
+                const py = (Math.cos(this.time * 2 + i) * 2) * scale;
+                ctx.beginPath();
+                ctx.arc(px, py, 1.5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Ponta da varinha brilhando
+        const tipPulse = 1 + Math.sin(this.time * 4) * 0.2;
+        ctx.fillStyle = wandCore;
+        ctx.shadowColor = wandCoreGlow;
+        ctx.shadowBlur = 12 * tipPulse;
+        ctx.beginPath();
+        ctx.arc(40 * scale, 0, 3 * scale * tipPulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Brilho interno da ponta
+        ctx.fillStyle = wandCoreGlow;
+        ctx.beginPath();
+        ctx.arc(40 * scale, -0.8 * scale, 1.5 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        ctx.restore();
+        ctx.restore(); // Fim do braço direito rotacionado
+
+        ctx.restore(); // Fim do corpo principal
 
         // Desenhar aura cosmética (se tiver)
         if (player.cosmetics && player.cosmetics.aura) {
@@ -3657,10 +3941,10 @@ const Game = {
         ctx.restore();
     },
 
-    // Desenha preview de skin de vassoura para a loja
-    drawBroomPreview(canvas, skinId) {
+    // Desenha preview de skin de varinha para a loja
+    drawWandPreview(canvas, skinId) {
         const ctx = canvas.getContext('2d');
-        const skin = this.broomSkins[skinId] || this.broomSkins.default;
+        const skin = this.wandSkins[skinId] || this.wandSkins.default;
         const size = canvas.width;
         const scale = size / 80;
 
@@ -3671,93 +3955,107 @@ const Game = {
 
         // Aura
         if (skin.aura) {
-            const auraGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, size * 0.4);
+            const auraGrad = ctx.createRadialGradient(10 * scale, 0, 5, 10 * scale, 0, size * 0.35);
             auraGrad.addColorStop(0, `rgba(${this.hexToRgb(skin.aura.color)}, ${skin.aura.alpha})`);
             auraGrad.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = auraGrad;
             ctx.beginPath();
-            ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2);
+            ctx.arc(10 * scale, 0, size * 0.35, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Cabo
-        const broomGrad = ctx.createLinearGradient(-30 * scale, 0, 25 * scale, 0);
-        broomGrad.addColorStop(0, skin.handle[0]);
-        broomGrad.addColorStop(0.3, skin.handle[1]);
-        broomGrad.addColorStop(0.7, skin.handle[2]);
-        broomGrad.addColorStop(1, skin.handle[3]);
-
-        ctx.fillStyle = broomGrad;
+        // Cabo da varinha (grip)
+        ctx.fillStyle = skin.handle;
         ctx.beginPath();
-        ctx.roundRect(-30 * scale, -2 * scale, 55 * scale, 5 * scale, 2);
+        ctx.roundRect(-25 * scale, -3 * scale, 12 * scale, 6 * scale, 2);
         ctx.fill();
 
-        // Escamas de dragão
-        if (skin.hasScales) {
-            ctx.fillStyle = this.darkenColor(skin.handle[2], 20);
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.arc(-20 * scale + i * 6 * scale, 0, 2 * scale, 0, Math.PI, true);
-                ctx.fill();
-            }
-        }
-
-        // Anel de metal
-        ctx.fillStyle = skin.metal;
-        ctx.fillRect(-3 * scale, -3 * scale, 5 * scale, 7 * scale);
-        ctx.fillStyle = skin.metalShine;
-        ctx.fillRect(-2 * scale, -2 * scale, 2 * scale, 5 * scale);
-
-        // Cerdas/Penas
-        const bristleBaseX = -30 * scale;
-
-        if (skin.hasFeathers) {
-            const featherColors = ['#ff6b6b', '#fd79a8', '#ffeaa7', '#ff9f43'];
-            for (let i = 0; i < 5; i++) {
-                const fy = -5 * scale + i * 2.5 * scale;
-                ctx.fillStyle = featherColors[i % featherColors.length];
-                ctx.beginPath();
-                ctx.moveTo(bristleBaseX, fy);
-                ctx.quadraticCurveTo(bristleBaseX - 12 * scale, fy + (i - 2) * scale, bristleBaseX - 18 * scale, fy + (i - 2) * 1.5 * scale);
-                ctx.quadraticCurveTo(bristleBaseX - 12 * scale, fy + 2 * scale, bristleBaseX, fy + 2 * scale);
-                ctx.fill();
-            }
-        } else {
-            // Amarração
-            ctx.fillStyle = skin.binding;
-            ctx.fillRect(bristleBaseX - 2 * scale, -4 * scale, 4 * scale, 9 * scale);
-
-            // Cerdas
-            for (let i = 0; i < 6; i++) {
-                const by = -5 * scale + i * 2 * scale;
-                ctx.fillStyle = skin.bristles[i % skin.bristles.length];
-                ctx.beginPath();
-                ctx.moveTo(bristleBaseX - 2 * scale, by);
-                ctx.lineTo(bristleBaseX - 15 * scale, by + (i - 2.5) * 0.8 * scale);
-                ctx.lineTo(bristleBaseX - 15 * scale, by + 2 * scale + (i - 2.5) * 0.8 * scale);
-                ctx.lineTo(bristleBaseX - 2 * scale, by + 2 * scale);
-                ctx.closePath();
-                ctx.fill();
-            }
-        }
-
-        // Efeitos especiais
-        if (skin.special === 'flames') {
-            for (let i = 0; i < 3; i++) {
-                ctx.fillStyle = `rgba(255, ${150 + i * 30}, 0, 0.8)`;
-                ctx.beginPath();
-                ctx.arc(bristleBaseX - 12 * scale + i * 3 * scale, -2 * scale + i * 2 * scale, 3 * scale, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        } else if (skin.special === 'electricSparks') {
-            ctx.strokeStyle = '#fff59d';
-            ctx.lineWidth = 1.5;
+        // Detalhes do cabo
+        ctx.strokeStyle = skin.woodDark;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
             ctx.beginPath();
-            ctx.moveTo(bristleBaseX - 10 * scale, 0);
-            ctx.lineTo(bristleBaseX - 15 * scale, -4 * scale);
-            ctx.lineTo(bristleBaseX - 18 * scale, 2 * scale);
+            ctx.moveTo((-22 + i * 3) * scale, -3 * scale);
+            ctx.lineTo((-22 + i * 3) * scale, 3 * scale);
             ctx.stroke();
         }
+
+        // Corpo principal da varinha
+        const wandGrad = ctx.createLinearGradient(-13 * scale, -2 * scale, -13 * scale, 2 * scale);
+        wandGrad.addColorStop(0, skin.woodLight);
+        wandGrad.addColorStop(0.5, skin.wood);
+        wandGrad.addColorStop(1, skin.woodDark);
+        ctx.fillStyle = wandGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(-13 * scale, -3 * scale);
+        ctx.lineTo(22 * scale, -1.5 * scale);
+        ctx.lineTo(22 * scale, 1.5 * scale);
+        ctx.lineTo(-13 * scale, 3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brilho na varinha
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(-10 * scale, -2 * scale);
+        ctx.lineTo(18 * scale, -1 * scale);
+        ctx.lineTo(18 * scale, -0.3 * scale);
+        ctx.lineTo(-10 * scale, -1 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Efeitos especiais
+        if (skin.special === 'deathlyGlow') {
+            ctx.shadowColor = '#E8E8E8';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = 'rgba(232, 232, 232, 0.6)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-13 * scale, 0);
+            ctx.lineTo(22 * scale, 0);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        } else if (skin.special === 'phoenixFeather') {
+            ctx.fillStyle = 'rgba(255, 107, 53, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(5 * scale, 0, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (skin.special === 'dragonHeartstring') {
+            ctx.fillStyle = 'rgba(85, 239, 196, 0.4)';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc((-5 + i * 8) * scale, 0, 2 * scale, 0, Math.PI, true);
+                ctx.fill();
+            }
+        } else if (skin.special === 'unicornHair') {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(5 * scale, 0, 8 * scale, 2 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (skin.special === 'thestralCore') {
+            ctx.fillStyle = 'rgba(139, 0, 255, 0.4)';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc((-2 + i * 6) * scale, (i % 2 === 0 ? -1 : 1) * scale, 2 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Ponta brilhante
+        ctx.fillStyle = skin.core;
+        ctx.shadowColor = skin.coreGlow;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(25 * scale, 0, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Brilho interno
+        ctx.fillStyle = skin.coreGlow;
+        ctx.beginPath();
+        ctx.arc(25 * scale, -1.5 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
 
         ctx.restore();
     },
@@ -3780,8 +4078,8 @@ const Game = {
             }
         });
 
-        // Previews de brooms
-        document.querySelectorAll('#broomsSection .shop-item').forEach(item => {
+        // Previews de wands
+        document.querySelectorAll('#wandsSection .shop-item').forEach(item => {
             const skinId = item.dataset.item;
             const previewDiv = item.querySelector('.item-preview');
             if (previewDiv && skinId) {
@@ -3792,7 +4090,7 @@ const Game = {
                 canvas.style.height = '100%';
                 previewDiv.innerHTML = '';
                 previewDiv.appendChild(canvas);
-                this.drawBroomPreview(canvas, skinId);
+                this.drawWandPreview(canvas, skinId);
             }
         });
     }

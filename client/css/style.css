@@ -1588,11 +1588,11 @@ body {
 .wizard-shadow { background: linear-gradient(135deg, #2d3436, #1e2324); }
 .wizard-ancient { background: linear-gradient(135deg, #6c5ce7, #5341d6); }
 
-.broom-nimbus { background: linear-gradient(135deg, #dfe6e9, #b2bec3); }
-.broom-firebolt { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-.broom-lightning { background: linear-gradient(135deg, #f1c40f, #d35400); }
-.broom-phoenix { background: linear-gradient(135deg, #e74c3c, #fd79a8); }
-.broom-dragon { background: linear-gradient(135deg, #00b894, #006266); }
+.wand-elder { background: linear-gradient(135deg, #4A3C2A, #1A1510); }
+.wand-phoenix { background: linear-gradient(135deg, #CD5C5C, #5C0000); }
+.wand-dragon { background: linear-gradient(135deg, #00B894, #003D3D); }
+.wand-unicorn { background: linear-gradient(135deg, #F5DEB3, #A0785A); }
+.wand-thestral { background: linear-gradient(135deg, #2D2D44, #0D0D17); }
 
 .item-info {
     text-align: center;

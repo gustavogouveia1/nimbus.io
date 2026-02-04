@@ -4,7 +4,7 @@ namespace NimbusIO\Entities;
 use Ratchet\ConnectionInterface;
 
 /**
- * Bruxo - Jogador em vassoura voadora
+ * Bruxo - Jogador flutuante com varinha mágica
  */
 class Wizard
 {
@@ -99,7 +99,7 @@ class Wizard
 
     // Customização
     public string $wizardSkin = 'default';
-    public string $broomSkin = 'default';
+    public string $wandSkin = 'default';
 
     // Cosméticos
     public array $cosmetics = [
@@ -115,7 +115,7 @@ class Wizard
         'spellPower' => 0,
         'spellSpeed' => 0,
         'castSpeed' => 0,
-        'broomSpeed' => 0,
+        'movementSpeed' => 0,
         'maxHealth' => 0,
         'healthRegen' => 0
     ];
@@ -166,8 +166,8 @@ class Wizard
             $dy /= $length;
         }
 
-        // Calcula velocidade com stats (velocidade da vassoura)
-        $actualSpeed = $this->speed + ($this->stats['broomSpeed'] * 0.25);
+        // Calcula velocidade com stats (velocidade de voo)
+        $actualSpeed = $this->speed + ($this->stats['movementSpeed'] * 0.25);
 
         // Sistema de Speed Boost (Shift)
         if ($this->wantsSpeedBoost && $this->speedBoostCharge >= $this->speedBoostMaxCharge && !$this->speedBoostActive) {
@@ -502,7 +502,7 @@ class Wizard
             'isSlowed' => $this->slowTimer > 0,
             'isBurning' => $this->burnTimer > 0,
             'wizardSkin' => $this->wizardSkin,
-            'broomSkin' => $this->broomSkin,
+            'wandSkin' => $this->wandSkin,
             'speedBoostCharge' => $this->speedBoostCharge,
             'speedBoostMaxCharge' => $this->speedBoostMaxCharge,
             'speedBoostActive' => $this->speedBoostActive,

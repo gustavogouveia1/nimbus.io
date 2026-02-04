@@ -186,8 +186,8 @@
                 <div class="stat-bar"><div class="stat-fill"></div></div>
                 <span class="stat-key">[J]</span>
             </div>
-            <div class="stat-row" data-stat="broomSpeed">
-                <span class="stat-name">Velocidade da Vassoura</span>
+            <div class="stat-row" data-stat="movementSpeed">
+                <span class="stat-name">Velocidade de Voo</span>
                 <div class="stat-bar"><div class="stat-fill"></div></div>
                 <span class="stat-key">[K]</span>
             </div>
@@ -248,7 +248,7 @@
 
             <div class="shop-tabs">
                 <button class="shop-tab active" data-tab="wizards">Bruxos</button>
-                <button class="shop-tab" data-tab="brooms">Vassouras</button>
+                <button class="shop-tab" data-tab="wands">Varinhas</button>
                 <button class="shop-tab" data-tab="cosmetics">Cosmeticos</button>
             </div>
 
@@ -305,45 +305,45 @@
                     </div>
                 </div>
 
-                <!-- Skins de Vassoura -->
-                <div class="shop-section hidden" id="broomsSection">
-                    <div class="shop-item" data-item="broom_nimbus" data-price="300">
-                        <div class="item-preview broom-nimbus"></div>
+                <!-- Skins de Varinhas -->
+                <div class="shop-section hidden" id="wandsSection">
+                    <div class="shop-item" data-item="wand_elder" data-price="2000">
+                        <div class="item-preview wand-elder"></div>
                         <div class="item-info">
-                            <span class="item-name">Nimbus 2000</span>
-                            <span class="item-price"><span class="gold-icon"></span>300</span>
+                            <span class="item-name">Varinha de Sabugueiro</span>
+                            <span class="item-price"><span class="gold-icon"></span>2000</span>
                         </div>
                         <button class="buy-btn">Comprar</button>
                     </div>
-                    <div class="shop-item" data-item="broom_firebolt" data-price="600">
-                        <div class="item-preview broom-firebolt"></div>
+                    <div class="shop-item" data-item="wand_phoenix" data-price="800">
+                        <div class="item-preview wand-phoenix"></div>
                         <div class="item-info">
-                            <span class="item-name">Firebolt</span>
-                            <span class="item-price"><span class="gold-icon"></span>600</span>
-                        </div>
-                        <button class="buy-btn">Comprar</button>
-                    </div>
-                    <div class="shop-item" data-item="broom_lightning" data-price="800">
-                        <div class="item-preview broom-lightning"></div>
-                        <div class="item-info">
-                            <span class="item-name">Lightning Bolt</span>
+                            <span class="item-name">Pena de Fenix</span>
                             <span class="item-price"><span class="gold-icon"></span>800</span>
                         </div>
                         <button class="buy-btn">Comprar</button>
                     </div>
-                    <div class="shop-item" data-item="broom_phoenix" data-price="1200">
-                        <div class="item-preview broom-phoenix"></div>
+                    <div class="shop-item" data-item="wand_dragon" data-price="600">
+                        <div class="item-preview wand-dragon"></div>
                         <div class="item-info">
-                            <span class="item-name">Phoenix Wing</span>
-                            <span class="item-price"><span class="gold-icon"></span>1200</span>
+                            <span class="item-name">Coracao de Dragao</span>
+                            <span class="item-price"><span class="gold-icon"></span>600</span>
                         </div>
                         <button class="buy-btn">Comprar</button>
                     </div>
-                    <div class="shop-item" data-item="broom_dragon" data-price="1800">
-                        <div class="item-preview broom-dragon"></div>
+                    <div class="shop-item" data-item="wand_unicorn" data-price="500">
+                        <div class="item-preview wand-unicorn"></div>
                         <div class="item-info">
-                            <span class="item-name">Dragon Rider</span>
-                            <span class="item-price"><span class="gold-icon"></span>1800</span>
+                            <span class="item-name">Pelo de Unicornio</span>
+                            <span class="item-price"><span class="gold-icon"></span>500</span>
+                        </div>
+                        <button class="buy-btn">Comprar</button>
+                    </div>
+                    <div class="shop-item" data-item="wand_thestral" data-price="1500">
+                        <div class="item-preview wand-thestral"></div>
+                        <div class="item-info">
+                            <span class="item-name">Nucleo de Testrálio</span>
+                            <span class="item-price"><span class="gold-icon"></span>1500</span>
                         </div>
                         <button class="buy-btn">Comprar</button>
                     </div>
@@ -574,14 +574,34 @@
         </div>
     </div>
 
+    <!-- Pixi.js - WebGL Renderer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.0.0/pixi.min.js"></script>
+
+    <!-- Pixi.js Compatibility Layer v7 -> v8 -->
+    <script src="js/pixi/PixiCompat.js?v=3"></script>
+
+    <!-- Pixi.js Modules - Sistema de renderização avançado -->
+    <script src="js/pixi/PixiApp.js?v=3"></script>
+    <script src="js/pixi/PixiCamera.js?v=3"></script>
+    <script src="js/pixi/ChunkManager.js?v=3"></script>
+    <script src="js/pixi/ProceduralTextures.js?v=3"></script>
+    <script src="js/pixi/OrganicTerrain.js?v=3"></script>
+    <script src="js/pixi/TerrainRenderer.js?v=3"></script>
+    <script src="js/pixi/WaterRenderer.js?v=3"></script>
+    <script src="js/pixi/VegetationRenderer.js?v=3"></script>
+    <script src="js/pixi/ObstacleRenderer.js?v=3"></script>
+    <script src="js/pixi/DecorationRenderer.js?v=3"></script>
+    <script src="js/pixi/ParticleSystem.js?v=3"></script>
+    <script src="js/pixi/LightingSystem.js?v=3"></script>
+
     <!-- Scripts - Nova estrutura modular -->
-    <script src="js/config/MapConfig.js?v=2"></script>
-    <script src="js/network/Network.js?v=2"></script>
-    <script src="js/network/Input.js?v=2"></script>
-    <script src="js/entities/Player.js?v=2"></script>
-    <script src="js/entities/Spell.js?v=2"></script>
-    <script src="js/core/Renderer.js?v=2"></script>
-    <script src="js/core/MapRenderer.js?v=2"></script>
-    <script src="js/core/Game.js?v=2"></script>
+    <script src="js/config/MapConfig.js?v=3"></script>
+    <script src="js/network/Network.js?v=3"></script>
+    <script src="js/network/Input.js?v=3"></script>
+    <script src="js/entities/Player.js?v=3"></script>
+    <script src="js/entities/Spell.js?v=3"></script>
+    <script src="js/core/Renderer.js?v=3"></script>
+    <script src="js/core/MapRenderer.js?v=3"></script>
+    <script src="js/core/Game.js?v=3"></script>
 </body>
 </html>

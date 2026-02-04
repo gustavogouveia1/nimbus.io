@@ -114,62 +114,66 @@ const PlayerEntity = {
         }
     },
 
-    // Designs de skins de vassouras
-    broomSkins: {
+    // Designs de skins de varinhas (para loja)
+    wandSkins: {
         default: {
-            handle: ['#5D3A1A', '#8B4513', '#A0522D', '#CD853F'],
-            metal: '#D4AF37',
-            metalShine: '#FFD700',
-            bristles: ['#DEB887', '#D2B48C', '#C4A574', '#DAA520'],
-            binding: '#8B4513',
+            wood: '#654321',
+            woodLight: '#8B7355',
+            woodDark: '#3E2723',
+            core: '#FFD700',
+            coreGlow: '#FFF8DC',
+            handle: '#4A3728',
             special: null
         },
-        broom_nimbus: {
-            handle: ['#c0c0c0', '#dfe6e9', '#ecf0f1', '#ffffff'],
-            metal: '#bdc3c7',
-            metalShine: '#ecf0f1',
-            bristles: ['#f5f5f5', '#e0e0e0', '#bdbdbd', '#9e9e9e'],
-            binding: '#95a5a6',
-            special: 'speedLines',
-            aura: { color: '#dfe6e9', alpha: 0.3 }
+        wand_elder: {
+            wood: '#2C2416',
+            woodLight: '#4A3C2A',
+            woodDark: '#1A1510',
+            core: '#E8E8E8',
+            coreGlow: '#FFFFFF',
+            handle: '#1E1A14',
+            special: 'deathlyGlow',
+            aura: { color: '#E8E8E8', alpha: 0.4 }
         },
-        broom_firebolt: {
-            handle: ['#8b0000', '#b22222', '#cd5c5c', '#e74c3c'],
-            metal: '#f39c12',
-            metalShine: '#ffd700',
-            bristles: ['#ff6b35', '#ff4500', '#ff6347', '#dc143c'],
-            binding: '#8b0000',
-            special: 'flames',
-            aura: { color: '#e74c3c', alpha: 0.25 }
+        wand_phoenix: {
+            wood: '#8B0000',
+            woodLight: '#CD5C5C',
+            woodDark: '#5C0000',
+            core: '#FF6B35',
+            coreGlow: '#FFD700',
+            handle: '#6B0000',
+            special: 'phoenixFeather',
+            aura: { color: '#FF6B35', alpha: 0.3 }
         },
-        broom_lightning: {
-            handle: ['#f1c40f', '#f39c12', '#e67e22', '#d35400'],
-            metal: '#fff9c4',
-            metalShine: '#ffffff',
-            bristles: ['#fff59d', '#ffee58', '#fdd835', '#f9a825'],
-            binding: '#f39c12',
-            special: 'electricSparks',
-            aura: { color: '#f1c40f', alpha: 0.3 }
+        wand_dragon: {
+            wood: '#006266',
+            woodLight: '#00B894',
+            woodDark: '#003D3D',
+            core: '#55EFC4',
+            coreGlow: '#81ECEC',
+            handle: '#004D4D',
+            special: 'dragonHeartstring',
+            aura: { color: '#00B894', alpha: 0.25 }
         },
-        broom_phoenix: {
-            handle: ['#c0392b', '#e74c3c', '#ff6b6b', '#ff8e8e'],
-            metal: '#ffd700',
-            metalShine: '#fff5cc',
-            bristles: ['#ff6b6b', '#fd79a8', '#fab1a0', '#ffeaa7'],
-            binding: '#d63031',
-            special: 'phoenixFeathers',
-            aura: { color: '#fd79a8', alpha: 0.3 },
-            hasFeathers: true
+        wand_unicorn: {
+            wood: '#DEB887',
+            woodLight: '#F5DEB3',
+            woodDark: '#A0785A',
+            core: '#E8E8E8',
+            coreGlow: '#FFFFFF',
+            handle: '#C4A574',
+            special: 'unicornHair',
+            aura: { color: '#FFFFFF', alpha: 0.35 }
         },
-        broom_dragon: {
-            handle: ['#006266', '#009432', '#00b894', '#55efc4'],
-            metal: '#2d3436',
-            metalShine: '#636e72',
-            bristles: ['#00b894', '#1abc9c', '#55efc4', '#81ecec'],
-            binding: '#006266',
-            special: 'dragonScales',
-            aura: { color: '#00b894', alpha: 0.25 },
-            hasScales: true
+        wand_thestral: {
+            wood: '#1A1A2E',
+            woodLight: '#2D2D44',
+            woodDark: '#0D0D17',
+            core: '#8B00FF',
+            coreGlow: '#DA70D6',
+            handle: '#16162A',
+            special: 'thestralCore',
+            aura: { color: '#8B00FF', alpha: 0.3 }
         }
     },
 
@@ -220,8 +224,8 @@ const PlayerEntity = {
         return this.wizardSkins[skinId] || this.wizardSkins.default;
     },
 
-    getBroomSkin(skinId) {
-        return this.broomSkins[skinId] || this.broomSkins.default;
+    getWandSkin(skinId) {
+        return this.wandSkins[skinId] || this.wandSkins.default;
     },
 
     getWandColor(wandType) {

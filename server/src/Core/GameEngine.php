@@ -429,12 +429,12 @@ class GameEngine implements MessageComponentInterface
         'wizard_gold' => ['type' => 'wizard', 'name' => 'Bruxo Dourado', 'price' => 1000],
         'wizard_shadow' => ['type' => 'wizard', 'name' => 'Bruxo Sombrio', 'price' => 1500],
         'wizard_ancient' => ['type' => 'wizard', 'name' => 'Mago Ancestral', 'price' => 2000],
-        // Skins de vassoura
-        'broom_nimbus' => ['type' => 'broom', 'name' => 'Nimbus 2000', 'price' => 300],
-        'broom_firebolt' => ['type' => 'broom', 'name' => 'Firebolt', 'price' => 600],
-        'broom_lightning' => ['type' => 'broom', 'name' => 'Lightning Bolt', 'price' => 800],
-        'broom_phoenix' => ['type' => 'broom', 'name' => 'Phoenix Wing', 'price' => 1200],
-        'broom_dragon' => ['type' => 'broom', 'name' => 'Dragon Rider', 'price' => 1800],
+        // Skins de varinha
+        'wand_elder' => ['type' => 'wand', 'name' => 'Varinha de Sabugueiro', 'price' => 2000],
+        'wand_phoenix' => ['type' => 'wand', 'name' => 'Pena de Fenix', 'price' => 800],
+        'wand_dragon' => ['type' => 'wand', 'name' => 'Coracao de Dragao', 'price' => 600],
+        'wand_unicorn' => ['type' => 'wand', 'name' => 'Pelo de Unicornio', 'price' => 500],
+        'wand_thestral' => ['type' => 'wand', 'name' => 'Nucleo de Testralio', 'price' => 1500],
         // Cosméticos - Efeitos de Nome
         'name_rainbow' => ['type' => 'nameEffect', 'name' => 'Nome Rainbow', 'price' => 800],
         'name_fire' => ['type' => 'nameEffect', 'name' => 'Nome Flamejante', 'price' => 600],
@@ -658,8 +658,8 @@ class GameEngine implements MessageComponentInterface
         // Aplica item
         if ($item['type'] === 'wizard') {
             $wizard->wizardSkin = $itemId;
-        } else if ($item['type'] === 'broom') {
-            $wizard->broomSkin = $itemId;
+        } else if ($item['type'] === 'wand') {
+            $wizard->wandSkin = $itemId;
         } else if ($item['type'] === 'nameEffect') {
             $wizard->cosmetics['nameEffect'] = $itemId;
         } else if ($item['type'] === 'tag') {
@@ -1093,7 +1093,7 @@ class GameEngine implements MessageComponentInterface
                 'spellPower' => mt_rand(0, 3),
                 'spellSpeed' => mt_rand(0, 2),
                 'castSpeed' => mt_rand(0, 2),
-                'broomSpeed' => mt_rand(0, 3),
+                'movementSpeed' => mt_rand(0, 3),
                 'maxHealth' => mt_rand(0, 2),
                 'healthRegen' => mt_rand(0, 2)
             ],
@@ -1113,7 +1113,7 @@ class GameEngine implements MessageComponentInterface
             // Customização
             'gold' => 0,
             'wizardSkin' => 'default',
-            'broomSkin' => 'default',
+            'wandSkin' => 'default',
         ];
     }
 
@@ -1179,7 +1179,7 @@ class GameEngine implements MessageComponentInterface
                 // Move em direção ao alvo se estiver longe
                 if ($distance > 300) {
                     $moveAngle = $targetAngle + (mt_rand(-30, 30) / 100);
-                    $speed = 2.5 + ($bot['stats']['broomSpeed'] * 0.2);
+                    $speed = 2.5 + ($bot['stats']['movementSpeed'] * 0.2);
                     // Aplica slow se ativo
                     if ($bot['slowTimer'] > 0) {
                         $speed *= 0.4;
@@ -1770,7 +1770,7 @@ class GameEngine implements MessageComponentInterface
                 'isSlowed' => ($bot['slowTimer'] ?? 0) > 0,
                 'isBurning' => ($bot['burnTimer'] ?? 0) > 0,
                 'wizardSkin' => $bot['wizardSkin'] ?? 'default',
-                'broomSkin' => $bot['broomSkin'] ?? 'default'
+                'wandSkin' => $bot['wandSkin'] ?? 'default'
             ];
         }
 

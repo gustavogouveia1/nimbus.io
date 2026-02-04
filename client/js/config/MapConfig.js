@@ -49,11 +49,11 @@ const MAP_CONFIG = {
         start: [1800, 4200],
         end: [4200, 1800],
         width: 300,
-        color: "#040810"
+        color: "#3498db"
     },
     bases: {
-        team1: { x: 300, y: 300, radius: 400, color: "#150a20" },
-        team2: { x: 5700, y: 5700, radius: 400, color: "#200a15" }
+        team1: { x: 300, y: 300, radius: 400, color: "#3498db" },
+        team2: { x: 5700, y: 5700, radius: 400, color: "#e74c3c" }
     },
     decorations: [
         { type: "mushroom_cluster", x: 500, y: 2500, scale: 1.0 },
@@ -74,11 +74,11 @@ const MAP_CONFIG = {
         { type: "mist", x: 4500, y: 4500, radius: 800, density: 0.4 }
     ],
     ambientColors: {
-        primary: "#050a05",
-        secondary: "#0a120a",
-        accent: "#101810",
-        glow: "#152015",
-        mist: "rgba(20, 30, 20, 0.2)",
-        darkness: "rgba(0, 0, 0, 0.3)"
+        primary: "#2d5a1e",
+        secondary: "#3d6b2a",
+        accent: "#4a7d35",
+        glow: "#66bb6a",
+        mist: "rgba(200, 220, 200, 0.08)",
+        darkness: "rgba(0, 30, 0, 0.1)"
     }
 };

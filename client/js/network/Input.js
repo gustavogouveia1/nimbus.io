@@ -213,7 +213,7 @@ const Input = {
         'o': 'spellPower',
         'p': 'spellSpeed',
         'j': 'castSpeed',
-        'k': 'broomSpeed',
+        'k': 'movementSpeed',
         'l': 'maxHealth',
         ';': 'healthRegen'
     },
